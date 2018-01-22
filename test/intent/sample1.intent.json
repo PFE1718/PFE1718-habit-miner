@@ -1,0 +1,7 @@
+{
+  "utterance": "launch habit mining",
+  "intent_type": "LaunchMiningIntent",
+  "intent": {
+    "LaunchMiningKeyword": "launch habit mining"
+  }
+}
