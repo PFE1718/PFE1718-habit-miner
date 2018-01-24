@@ -52,8 +52,8 @@ class HabitsManager(object):
         self.load_files()
 
     def load_files(self):
-        self.habits = json.load(open(self.habits_file_path))
-        self.triggers = json.load(open(self.triggers_file_path))
+        self.habits = json.load(open(self.habits_file_path, 'r+'))
+        self.triggers = json.load(open(self.triggers_file_path, 'r+'))
 
     def get_all_habits(self):
         """Return all the existing habits of the user"""
@@ -85,7 +85,7 @@ class HabitsManager(object):
                     "time": t
                 }
             ]
-        with open(self.habits_file_path, 'w') as habits_file:
+        with open(self.habits_file_path, 'w+') as habits_file:
             json.dump(self.habits, habits_file)
 
     def automate_habit(self, habit_id, auto, new_triggers=None):
@@ -116,11 +116,11 @@ class HabitsManager(object):
                     return False
 
             habit["triggers"] = new_triggers
-            with open(self.triggers_file_path, 'w') as triggers_file:
+            with open(self.triggers_file_path, 'w+') as triggers_file:
                 json.dump(self.triggers, triggers_file)
 
         self.habits[habit_id] = habit
-        with open(self.habits_file_path, 'w') as habits_file:
+        with open(self.habits_file_path, 'w+') as habits_file:
             json.dump(self.habits, habits_file)
 
         return True
@@ -154,7 +154,7 @@ class HabitsManager(object):
         """
         self.habits[habit_id]["user_choice"] = True
         self.habits[habit_id]["automatized"] = 0
-        with open(self.habits_file_path, 'w') as habits_file:
+        with open(self.habits_file_path, 'w+') as habits_file:
             json.dump(self.habits, habits_file)
 
     def get_trigger_by_id(self, trigger_id):
@@ -193,7 +193,7 @@ def create_skill():
 def read_json(logs_file_path):
     data = []
     # Open Json
-    for line in open(logs_file_path, 'r'):
+    for line in open(logs_file_path, 'r+'):
         data.append(json.loads(line))
     parsed = json.loads(json.dumps(data))
     print(parsed[0])
