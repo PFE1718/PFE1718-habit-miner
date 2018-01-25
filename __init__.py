@@ -50,10 +50,12 @@ class HabitsManager(object):
     def __init__(self):
         self.habits_file_path = "/opt/mycroft/habits/habits.json"
         self.triggers_file_path = "/opt/mycroft/habits/triggers.json"
+        self.load_files()
 
     def load_files(self):
         self.habits = json.load(open(self.habits_file_path))
         self.triggers = json.load(open(self.triggers_file_path))
+
 
     def get_all_habits(self):
         """Return all the existing habits of the user"""
@@ -63,12 +65,22 @@ class HabitsManager(object):
         """Return one particular habit of the user"""
         return self.habits[habit_id]
 
-    def register_habit(self, trigger_type, intents, str1, days=None, t=None):
+
+    def check_habit_presence(self,trigger_type,time,days):
+        old_habits = self.get_all_habits()
+        for old_habit in old_habits:
+            if(trigger_type is old_habit['trigger_type']
+                and time is old_habit['time']
+                and days is old_habit['days']):
+                return True
+        return False
+
+    def register_habit(self, utterance, trigger_type, intents, params,max_interval, days=None, t=None):
         """Register a new habit in habits.json
         :param str1:
         """
         if trigger_type == "skill":
-            self.habits = [
+            self.habits += [
                 {
                     "intents": intents,
                     "trigger_type": trigger_type,
@@ -78,18 +90,18 @@ class HabitsManager(object):
                 }
             ]
         else:
-            self.habits = [
+            self.habits += [
                 {
                     "intents": intents,
                     "trigger_type": trigger_type,
                     "automatized": 0,
                     "user_choice": False,
                     "time": t,
-                    "days": days
+                    "days": days,
+                    "interval_max":max_interval
                 }
             ]
-        with open(self.habits_file_path, 'a+') as habits_file:
-            habits_file.write("\n")
+        with open(self.habits_file_path, 'w') as habits_file:
             json.dump(self.habits, habits_file)
 
     def automate_habit(self, habit_id, auto, new_triggers=None):
@@ -214,6 +226,7 @@ def parse_json(data):
     ids = []
     intents = []
     params = []
+    utt = []
     # parse each json variable
     for i in range(len(data)):
         datetime_object = parser.parse(data[i]["datetime"])
@@ -231,7 +244,9 @@ def parse_json(data):
         intents.append(my_intent)
         my_param = str(data[i]["parameters"])
         params.append(my_param)
-    X = np.array((days, times, ids, intents, params))
+        my_utterance = str(data[i]["utterance"])
+        utt.append(my_utterance)
+    X = np.array((days, times, ids, intents, params,utt))
     X = X.transpose()
     print(X.shape)
     return X
@@ -280,10 +295,20 @@ def time_to_hours(date):
 def write_habit(X, labels):
     my_habit_manager = HabitsManager()
     # calculate mean X and y
-    x = mean(X[:, 0].astype(float))
-    y = mean(X[:, 1].astype(float))
+    day = round(mean(X[:, 0].astype(float)),0)
+    time = round(mean(X[:, 1].astype(float)),0)
+    interval_max = max(X[:, 0].astype(float))
     # Register ID, params, intents, days, hours
-    HabitsManager.register_habit(HabitsManager(), str(X[0, 2]), str(X[0, 4]), str(X[0, 3]), days=str(x), t=str(y))
+    if not my_habit_manager.check_habit_presence(str(X[0, 2]), str(time), str(day)):
+        HabitsManager.register_habit(
+            HabitsManager(),
+            utterance=str(X[0, 5]),
+            trigger_type=str(X[0, 2]),
+            intents=str(X[0, 3]),
+            params=str(X[0, 4]),
+            days=str(day),
+            t=str(time),
+            max_interval=str(interval_max))
 
 
 # MAIN STEPS
