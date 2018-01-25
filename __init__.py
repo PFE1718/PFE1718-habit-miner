@@ -302,11 +302,15 @@ def write_habit(X, labels):
     time = float(mean(X[:, 1].astype(float)))
     minute= time - int(time)
     minute = minute * 60
-    time = int(time)
+
+    hour = int(float(time))
     minute = round(minute,0)
-    interval_max = max(X[:, 0].astype(float))
+    time_array = X[:, 1].astype(float)
+    interval_max = max(np.absolute((hour*60+minute)-(time_array.astype(int)*60
+                                                            +(time_array
+                                                            -time_array.astype(int)))))
     # Register ID, params, intents, days, hours
-    if not my_habit_manager.check_habit_presence(str(X[0, 2]), str(time)+":"+str(minute), str(day)):
+    if not my_habit_manager.check_habit_presence(str(X[0, 2]), str(hour)+":"+str(minute), str(day)):
         my_habit_manager.register_habit(
             utterance=str(X[0, 5]),
             trigger_type=str(X[0, 2]),
