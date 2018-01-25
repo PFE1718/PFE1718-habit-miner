@@ -73,7 +73,8 @@ class HabitsManager(object):
         old_habits = self.get_all_habits()
         for old_habit in old_habits:
             if(trigger_type is old_habit['intents'][0]['name']
-                and time is old_habit['time']
+                # Compare hours only
+                and time.split(":")[0] != old_habit['time'].split(":")[0]
                 and days is old_habit['days']):
                 return True
         return False
@@ -99,6 +100,7 @@ class HabitsManager(object):
                         "name": trigger_type,
                         "last_utterance":utterance
                                  }],
+                    "trigger_type":trigger_type,
                     "automatized": 0,
                     "user_choice": False,
                     "time": t,
@@ -308,6 +310,7 @@ def write_habit(X, labels):
     hour = int(float(time))
     minute = round(minute,0)
     time_array = X[:, 1].astype(float)
+    # max hour in minutes
     interval_max = max(np.absolute((hour*60+minute)-(time_array.astype(int)*60
                                                             +(time_array
                                                             -time_array.astype(int)))))
