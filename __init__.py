@@ -67,6 +67,9 @@ class HabitsManager(object):
 
 
     def check_habit_presence(self,trigger_type,time,days):
+        """returns true if a habit with same
+        trigger_type,time and days alreasy exists,
+        returns False if not"""
         old_habits = self.get_all_habits()
         for old_habit in old_habits:
             if(trigger_type is old_habit['trigger_type']
@@ -287,7 +290,7 @@ def time_to_hours(date):
     """
     Function returns time of the day in hours in range 1-10"""
     td = date.time()
-    td_t = (float(td.hour) * 10.0) / 24.0
+    td_t = (((float(td.hour) * 60 + float(td.minute)) / 60) * 10.0) / 24.0
     return float(td_t)
 
 
@@ -296,18 +299,21 @@ def write_habit(X, labels):
     my_habit_manager = HabitsManager()
     # calculate mean X and y
     day = round(mean(X[:, 0].astype(float)),0)
-    time = round(mean(X[:, 1].astype(float)),0)
+    time = float(mean(X[:, 1].astype(float)))
+    minute= time - int(time)
+    minute = minute * 60
+    time = int(time)
+    minute = round(minute,0)
     interval_max = max(X[:, 0].astype(float))
     # Register ID, params, intents, days, hours
-    if not my_habit_manager.check_habit_presence(str(X[0, 2]), str(time), str(day)):
-        HabitsManager.register_habit(
-            HabitsManager(),
+    if not my_habit_manager.check_habit_presence(str(X[0, 2]), str(time)+":"+str(minute), str(day)):
+        my_habit_manager.register_habit(
             utterance=str(X[0, 5]),
             trigger_type=str(X[0, 2]),
             intents=str(X[0, 3]),
             params=str(X[0, 4]),
             days=str(day),
-            t=str(time),
+            t=str(time)+":"+str(minute),
             max_interval=str(interval_max))
 
 
