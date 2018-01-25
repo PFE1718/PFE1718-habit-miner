@@ -23,6 +23,7 @@ from sklearn.preprocessing import StandardScaler
 from random import randrange
 from datetime import datetime, timedelta, time
 from dateutil import parser
+from statistics import mean
 
 from adapt.intent import IntentBuilder
 from mycroft.skills.core import MycroftSkill
@@ -49,11 +50,10 @@ class HabitsManager(object):
     def __init__(self):
         self.habits_file_path = "/opt/mycroft/habits/habits.json"
         self.triggers_file_path = "/opt/mycroft/habits/triggers.json"
-        self.load_files()
 
     def load_files(self):
-        self.habits = json.load(open(self.habits_file_path, 'r+'))
-        self.triggers = json.load(open(self.triggers_file_path, 'r+'))
+        self.habits = json.load(open(self.habits_file_path))
+        self.triggers = json.load(open(self.triggers_file_path))
 
     def get_all_habits(self):
         """Return all the existing habits of the user"""
@@ -63,10 +63,12 @@ class HabitsManager(object):
         """Return one particular habit of the user"""
         return self.habits[habit_id]
 
-    def register_habit(self, trigger_type, intents, t=None):
-        """Register a new habit in habits.json"""
+    def register_habit(self, trigger_type, intents, str1, days=None, t=None):
+        """Register a new habit in habits.json
+        :param str1:
+        """
         if trigger_type == "skill":
-            self.habits += [
+            self.habits = [
                 {
                     "intents": intents,
                     "trigger_type": trigger_type,
@@ -76,16 +78,18 @@ class HabitsManager(object):
                 }
             ]
         else:
-            self.habits += [
+            self.habits = [
                 {
                     "intents": intents,
                     "trigger_type": trigger_type,
                     "automatized": 0,
                     "user_choice": False,
-                    "time": t
+                    "time": t,
+                    "days": days
                 }
             ]
-        with open(self.habits_file_path, 'w+') as habits_file:
+        with open(self.habits_file_path, 'a+') as habits_file:
+            habits_file.write("\n")
             json.dump(self.habits, habits_file)
 
     def automate_habit(self, habit_id, auto, new_triggers=None):
@@ -131,8 +135,8 @@ class HabitsManager(object):
             for i in new_triggers:
                 LOGGER.info("Testing trigger" + str(habit["intents"][int(i)]))
                 if habit["intents"][i]["name"] == known_trig["intent"] and \
-                    habit["intents"][i]["parameters"] \
-                        == known_trig["parameters"]:
+                                habit["intents"][i]["parameters"] \
+                                == known_trig["parameters"]:
                     return False
                 to_add += [
                     {
@@ -187,6 +191,7 @@ class HabitMinerSkill(MycroftSkill):
 def create_skill():
     return HabitMinerSkill()
 
+
 # Read json logs
 
 
@@ -198,6 +203,7 @@ def read_json(logs_file_path):
     parsed = json.loads(json.dumps(data))
     print(parsed[0])
     return parsed
+
 
 # Parse json and extract variables variables
 
@@ -259,7 +265,7 @@ def time_to_seconds(date):
     """
     Function returns time of the day in seconds"""
     td = date.time()
-    return ((td.hour * 3600 + td.second) * 10**6 + td.microsecond) / 10**6
+    return ((td.hour * 3600 + td.second) * 10 ** 6 + td.microsecond) / 10 ** 6
 
 
 def time_to_hours(date):
@@ -268,6 +274,17 @@ def time_to_hours(date):
     td = date.time()
     td_t = (float(td.hour) * 10.0) / 24.0
     return float(td_t)
+
+
+# Write new habit
+def write_habit(X, labels):
+    my_habit_manager = HabitsManager()
+    # calculate mean X and y
+    x = mean(X[:, 0].astype(float))
+    y = mean(X[:, 1].astype(float))
+    # Register ID, params, intents, days, hours
+    HabitsManager.register_habit(HabitsManager(), str(X[0, 2]), str(X[0, 4]), str(X[0, 3]), days=str(x), t=str(y))
+
 
 # MAIN STEPS
 # Learning steps
@@ -286,25 +303,28 @@ def process_mining(logs_file_path):
     for i in unique_ids:
         # even_numbers = list(filter(lambda x: x % 2 == 0, fibonacci))
         X_mini = X[X[:, 2] == i]
-        if(X_mini[:, 0].shape[0] > 2):
+        if (X_mini[:, 0].shape[0] > 2):
             X_mini_cluster = X_mini[:, [0, 1]]
             # Affinity propagation
             # cluster_centers_indices, labels = compute_AP(X_mini_cluster)
 
             # dbscan
             core_samples_mask, labels = compute_DBSCAN(X_mini_cluster)
+
             # convert days and hours to 24 and 7 ranges
 
             def to_24(x): return (x / 10) * 7
 
             def to_7(x): return (x / 10) * 24
+
             X_mini[:, 0] = to_24(X_mini[:, 0].astype(float))
             X_mini[:, 1] = to_7(X_mini[:, 1].astype(float))
             X_mini_cluster[:, 0] = to_24(X_mini_cluster[:, 0].astype(float))
             X_mini_cluster[:, 1] = to_7(X_mini_cluster[:, 1].astype(float))
-    # Plot AP
-    # plot_AP(X_mini_cluster,cluster_centers_indices,labels)
-    # plot dbscan
+            write_habit(X_mini, labels)
+            # Plot AP
+            # plot_AP(X_mini_cluster,cluster_centers_indices,labels)
+            # plot dbscan
 
 
 # MODELS
