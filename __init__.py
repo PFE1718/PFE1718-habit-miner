@@ -72,7 +72,7 @@ class HabitsManager(object):
         returns False if not"""
         old_habits = self.get_all_habits()
         for old_habit in old_habits:
-            if(trigger_type is old_habit['trigger_type']
+            if(trigger_type is old_habit['intents'][0]['name']
                 and time is old_habit['time']
                 and days is old_habit['days']):
                 return True
@@ -95,8 +95,10 @@ class HabitsManager(object):
         else:
             self.habits += [
                 {
-                    "intents": intents,
-                    "trigger_type": trigger_type,
+                    "intents": [{"parameters":params,
+                        "name": trigger_type,
+                        "last_utterance":utterance
+                                 }],
                     "automatized": 0,
                     "user_choice": False,
                     "time": t,
