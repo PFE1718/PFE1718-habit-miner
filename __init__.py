@@ -243,7 +243,7 @@ def parse_json(data):
         ids.append(my_id)
         my_intent = str(data[i]["type"])
         intents.append(my_intent)
-        my_param = str(data[i]["parameters"])
+        my_param = data[i]["parameters"]
         params.append(my_param)
         my_utterance = str(data[i]["utterance"])
         utt.append(my_utterance)
