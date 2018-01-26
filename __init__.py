@@ -377,6 +377,7 @@ def process_mining(logs_file_path):
     LOG.info("processing finished")
 
     run_apriori(logs_file_path)
+    LOG.info("apriori finished")
 
 
 # MODELS
