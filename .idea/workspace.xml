@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="165ceb9c-5cf4-48de-a158-8327415e9177" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/__init__.py" afterPath="$PROJECT_DIR$/__init__.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -17,8 +16,8 @@
       <file leaf-file-name="__init__.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/__init__.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="686">
-              <caret line="339" column="38" lean-forward="true" selection-start-line="339" selection-start-column="38" selection-end-line="339" selection-end-column="38" />
+            <state relative-caret-position="740">
+              <caret line="300" column="25" lean-forward="true" selection-start-line="300" selection-start-column="25" selection-end-line="300" selection-end-column="25" />
               <folding>
                 <element signature="e#672#683#0" expanded="true" />
               </folding>
@@ -320,7 +319,14 @@
       <option name="project" value="LOCAL" />
       <updated>1516966021352</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="correctif bug ecriture des habits">
+      <created>1516970212352</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1516970212352</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -364,7 +370,8 @@
     <MESSAGE value="modif register habit" />
     <MESSAGE value="time ecrit en int" />
     <MESSAGE value="log modified" />
-    <option name="LAST_COMMIT_MESSAGE" value="log modified" />
+    <MESSAGE value="correctif bug ecriture des habits" />
+    <option name="LAST_COMMIT_MESSAGE" value="correctif bug ecriture des habits" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -401,8 +408,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="686">
-          <caret line="339" column="38" lean-forward="true" selection-start-line="339" selection-start-column="38" selection-end-line="339" selection-end-column="38" />
+        <state relative-caret-position="740">
+          <caret line="300" column="25" lean-forward="true" selection-start-line="300" selection-start-column="25" selection-end-line="300" selection-end-column="25" />
           <folding>
             <element signature="e#672#683#0" expanded="true" />
           </folding>
