@@ -29,7 +29,7 @@ from adapt.intent import IntentBuilder
 from mycroft.skills.core import MycroftSkill
 from mycroft.skills.core import intent_handler
 from mycroft.skills.context import adds_context, removes_context
-from mycroft.util.log import getLogger
+from mycroft.util.log import getLogger, LOG
 
 __author__ = 'Nuttymoon'
 
@@ -56,6 +56,7 @@ class HabitsManager(object):
         self.habits = json.load(open(self.habits_file_path))
         self.triggers = json.load(open(self.triggers_file_path))
 
+
     def get_all_habits(self):
         """Return all the existing habits of the user"""
         return self.habits
@@ -64,7 +65,8 @@ class HabitsManager(object):
         """Return one particular habit of the user"""
         return self.habits[habit_id]
 
-    def check_habit_presence(self, trigger_type, time, days):
+
+    def check_habit_presence(self,trigger_type,time,days):
         """returns true if a habit with same
         trigger_type,time and days alreasy exists,
         returns False if not"""
@@ -73,13 +75,14 @@ class HabitsManager(object):
             if(trigger_type is old_habit['intents'][0]['name']
                 # Compare hours only
                 and time.split(":")[0] != old_habit['time'].split(":")[0]
-                    and days is old_habit['days']):
+                and days is old_habit['days']):
                 return True
         return False
 
-    def register_habit(self, trigger_type, intents, t=None, days=None,
-                       interval_max=None):
-        """Register a new habit in habits.json"""
+    def register_habit(self, utterance, trigger_type, intents, params,max_interval, days=None, t=None):
+        """Register a new habit in habits.json
+        :param str1:
+        """
         if trigger_type == "skill":
             self.habits += [
                 {
@@ -93,13 +96,16 @@ class HabitsManager(object):
         else:
             self.habits += [
                 {
-                    "intents": intents,
-                    "trigger_type": trigger_type,
+                    "intents": [{"parameters":params,
+                        "name": trigger_type,
+                        "last_utterance":utterance
+                                 }],
+                    "trigger_type":trigger_type,
                     "automatized": 0,
                     "user_choice": False,
                     "time": t,
                     "days": days,
-                    "interval_max": interval_max
+                    "interval_max":max_interval
                 }
             ]
         with open(self.habits_file_path, 'w') as habits_file:
@@ -148,8 +154,8 @@ class HabitsManager(object):
             for i in new_triggers:
                 LOGGER.info("Testing trigger" + str(habit["intents"][int(i)]))
                 if habit["intents"][i]["name"] == known_trig["intent"] and \
-                        habit["intents"][i]["parameters"] \
-                        == known_trig["parameters"]:
+                                habit["intents"][i]["parameters"] \
+                                == known_trig["parameters"]:
                     return False
                 to_add += [
                     {
@@ -247,7 +253,7 @@ def parse_json(data):
         params.append(my_param)
         my_utterance = str(data[i]["utterance"])
         utt.append(my_utterance)
-    X = np.array((days, times, ids, intents, params, utt))
+    X = np.array((days, times, ids, intents, params,utt))
     X = X.transpose()
     print(X.shape)
     return X
@@ -296,30 +302,28 @@ def time_to_hours(date):
 def write_habit(X, labels):
     my_habit_manager = HabitsManager()
     # calculate mean X and y
-    day = round(mean(X[:, 0].astype(float)), 0)
+    day = round(mean(X[:, 0].astype(float)),0)
     time = float(mean(X[:, 1].astype(float)))
-    minute = time - int(time)
+    minute= time - int(time)
     minute = minute * 60
 
     hour = int(float(time))
-    minute = round(minute, 0)
+    minute = int(round(minute,0))
     time_array = X[:, 1].astype(float)
     # max hour in minutes
-    interval_max = max(np.absolute((hour*60+minute) -
-                                   (time_array.astype(int)*60 +
-                                    (time_array -
-                                     time_array.astype(int)))))
+    interval_max = min(np.absolute((hour*60+minute)-(time_array.astype(int)*60
+                                                            +(time_array
+                                                            -time_array.astype(int)))))
     # Register ID, params, intents, days, hours
-    if not my_habit_manager.check_habit_presence(str(X[0, 2]),
-                                                 str(hour)+":"+str(minute),
-                                                 str(day)):
-        my_habit_manager.register_habit("time", [
-            {
-                "name": str(X[0, 3]),
-                "parameters": str(X[0, 4]),
-                "last_utterance":str(X[0, 5])
-            }
-        ], str(time)+":"+str(minute), str(day), str(interval_max))
+    if not my_habit_manager.check_habit_presence(str(X[0, 2]), str(hour)+":"+str(minute), str(day)):
+        my_habit_manager.register_habit(
+            utterance=str(X[0, 5]),
+            trigger_type=str(X[0, 2]),
+            intents=str(X[0, 3]),
+            params=str(X[0, 4]),
+            days=str(day),
+            t=str(hour)+":"+str(minute),
+            max_interval=str(interval_max))
 
 
 # MAIN STEPS
@@ -361,6 +365,8 @@ def process_mining(logs_file_path):
             # Plot AP
             # plot_AP(X_mini_cluster,cluster_centers_indices,labels)
             # plot dbscan
+
+    LOG.info("oui")
 
 
 # MODELS
