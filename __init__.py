@@ -366,7 +366,7 @@ def process_mining(logs_file_path):
             # plot_AP(X_mini_cluster,cluster_centers_indices,labels)
             # plot dbscan
 
-    LOG.info("oui")
+    LOG.info("processing finished")
 
 
 # MODELS

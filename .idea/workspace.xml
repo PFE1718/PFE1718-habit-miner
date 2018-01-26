@@ -4,7 +4,6 @@
     <list default="true" id="165ceb9c-5cf4-48de-a158-8327415e9177" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/__init__.py" afterPath="$PROJECT_DIR$/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/vocab/en-us/LaunchMiningKeyword.voc" afterPath="$PROJECT_DIR$/vocab/en-us/LaunchMiningKeyword.voc" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -19,7 +18,7 @@
         <entry file="file://$PROJECT_DIR$/__init__.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="398">
-              <caret line="320" column="34" lean-forward="false" selection-start-line="320" selection-start-column="34" selection-end-line="320" selection-end-column="34" />
+              <caret line="368" column="35" lean-forward="true" selection-start-line="368" selection-start-column="35" selection-end-line="368" selection-end-column="35" />
               <folding>
                 <element signature="e#672#683#0" expanded="true" />
               </folding>
@@ -307,7 +306,14 @@
       <option name="project" value="LOCAL" />
       <updated>1516922242946</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="time ecrit en int">
+      <created>1516964208041</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1516964208041</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -349,7 +355,8 @@
     <MESSAGE value="interval max corrige" />
     <MESSAGE value="register habits corrigé" />
     <MESSAGE value="modif register habit" />
-    <option name="LAST_COMMIT_MESSAGE" value="modif register habit" />
+    <MESSAGE value="time ecrit en int" />
+    <option name="LAST_COMMIT_MESSAGE" value="time ecrit en int" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -387,7 +394,7 @@
     <entry file="file://$PROJECT_DIR$/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="398">
-          <caret line="320" column="34" lean-forward="false" selection-start-line="320" selection-start-column="34" selection-end-line="320" selection-end-column="34" />
+          <caret line="368" column="35" lean-forward="true" selection-start-line="368" selection-start-column="35" selection-end-line="368" selection-end-column="35" />
           <folding>
             <element signature="e#672#683#0" expanded="true" />
           </folding>
