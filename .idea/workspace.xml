@@ -16,8 +16,8 @@
       <file leaf-file-name="__init__.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/__init__.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="740">
-              <caret line="300" column="25" lean-forward="true" selection-start-line="300" selection-start-column="25" selection-end-line="300" selection-end-column="25" />
+            <state relative-caret-position="525">
+              <caret line="242" column="25" lean-forward="true" selection-start-line="242" selection-start-column="25" selection-end-line="242" selection-end-column="25" />
               <folding>
                 <element signature="e#672#683#0" expanded="true" />
               </folding>
@@ -326,7 +326,14 @@
       <option name="project" value="LOCAL" />
       <updated>1516970212352</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="correctif bug ecriture des habits2">
+      <created>1516979954202</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1516979954202</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -371,7 +378,8 @@
     <MESSAGE value="time ecrit en int" />
     <MESSAGE value="log modified" />
     <MESSAGE value="correctif bug ecriture des habits" />
-    <option name="LAST_COMMIT_MESSAGE" value="correctif bug ecriture des habits" />
+    <MESSAGE value="correctif bug ecriture des habits2" />
+    <option name="LAST_COMMIT_MESSAGE" value="correctif bug ecriture des habits2" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -408,8 +416,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="740">
-          <caret line="300" column="25" lean-forward="true" selection-start-line="300" selection-start-column="25" selection-end-line="300" selection-end-column="25" />
+        <state relative-caret-position="525">
+          <caret line="242" column="25" lean-forward="true" selection-start-line="242" selection-start-column="25" selection-end-line="242" selection-end-column="25" />
           <folding>
             <element signature="e#672#683#0" expanded="true" />
           </folding>
