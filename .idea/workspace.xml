@@ -17,8 +17,8 @@
       <file leaf-file-name="__init__.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/__init__.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="398">
-              <caret line="368" column="35" lean-forward="true" selection-start-line="368" selection-start-column="35" selection-end-line="368" selection-end-column="35" />
+            <state relative-caret-position="686">
+              <caret line="339" column="38" lean-forward="true" selection-start-line="339" selection-start-column="38" selection-end-line="339" selection-end-column="38" />
               <folding>
                 <element signature="e#672#683#0" expanded="true" />
               </folding>
@@ -313,7 +313,14 @@
       <option name="project" value="LOCAL" />
       <updated>1516964208041</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="log modified">
+      <created>1516966021352</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1516966021352</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -356,7 +363,8 @@
     <MESSAGE value="register habits corrigé" />
     <MESSAGE value="modif register habit" />
     <MESSAGE value="time ecrit en int" />
-    <option name="LAST_COMMIT_MESSAGE" value="time ecrit en int" />
+    <MESSAGE value="log modified" />
+    <option name="LAST_COMMIT_MESSAGE" value="log modified" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -393,8 +401,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="398">
-          <caret line="368" column="35" lean-forward="true" selection-start-line="368" selection-start-column="35" selection-end-line="368" selection-end-column="35" />
+        <state relative-caret-position="686">
+          <caret line="339" column="38" lean-forward="true" selection-start-line="339" selection-start-column="38" selection-end-line="339" selection-end-column="38" />
           <folding>
             <element signature="e#672#683#0" expanded="true" />
           </folding>

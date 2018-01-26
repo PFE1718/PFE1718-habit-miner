@@ -72,8 +72,8 @@ class HabitsManager(object):
         for old_habit in old_habits:
             if(trigger_type is old_habit['intents'][0]['name']
                 # Compare hours only
-                and time.split(":")[0] != old_habit['time'].split(":")[0]
-                    and days is old_habit['days']):
+                #and time.split(":")[0] != old_habit['time'].split(":")[0]
+                and days is old_habit['days']):
                 return True
         return False
 
@@ -293,32 +293,41 @@ def time_to_hours(date):
 
 
 # Write new habit
-def write_habit(X, labels):
-    my_habit_manager = HabitsManager()
-    # calculate mean X and y
-    day = round(mean(X[:, 0].astype(float)), 0)
-    time = float(mean(X[:, 1].astype(float)))
-    minute = time - int(time)
-    minute = minute * 60
+def write_habit(X, labels,core_samples_mask_dbscan):
+    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+    # Black removed and is used for noise instead.
+    unique_labels = set(labels)
+    for k in unique_labels:
+        #Check if cluster
+        if k >=0:
 
-    hour = int(float(time))
-    minute = int(round(minute, 0))
-    time_array = X[:, 1].astype(float)
-    # max hour in minutes
-    interval_max = min(np.absolute((hour*60+minute) -
-                                   (time_array.astype(int)*60 +
-                                    (time_array + time_array.astype(int)))))
-    # Register ID, params, intents, days, hours
-    if not my_habit_manager.check_habit_presence(str(X[0, 2]),
-                                                 str(hour)+":"+str(minute),
-                                                 str(day)):
-        my_habit_manager.register_habit("time", [
-            {
-                "name": str(X[0, 3]),
-                "parameters": X[0, 4],
-                "last_utterance": str(X[0, 5])
-            }
-        ], str(hour)+":"+str(minute), [str(day)], str(interval_max))
+            class_member_mask = (labels == k)
+
+            xy = X[class_member_mask & core_samples_mask_dbscan]
+            if (len(xy[:, 1]) > 1):
+                day = round(mean(xy[:, 0].astype(float)), 0)
+                hour = xy[:, 1].astype(float).astype(int)
+                minute = xy[:, 1].astype(float) - hour
+                hour_moy = float(mean(hour))
+                min_moy = float(mean(minute))
+
+                interval_max = max(np.absolute((hour_moy * 60 + min_moy) - hour * 60 - minute))
+                # Register ID, params, intents, days, hours
+                my_habit_manager = HabitsManager()
+                if not my_habit_manager.check_habit_presence(str(X[0, 2]),
+                                                             str(hour_moy) + ":" + str(min_moy),
+                                                             str(day)):
+                    my_habit_manager.register_habit("time", [
+                        {
+                            "name": str(X[0, 3]),
+                            "parameters": X[0, 4],
+                            "last_utterance": str(X[0, 5])
+                        }
+                    ], str(int(hour_moy)) + ":" + str(int(min_moy)), [str(day)], str(interval_max))
+
+
+
+
 
 # MAIN STEPS
 # Learning steps
@@ -341,7 +350,6 @@ def process_mining(logs_file_path):
             X_mini_cluster = X_mini[:, [0, 1]]
             # Affinity propagation
             # cluster_centers_indices, labels = compute_AP(X_mini_cluster)
-
             # dbscan
             core_samples_mask, labels = compute_DBSCAN(X_mini_cluster)
 
@@ -355,7 +363,8 @@ def process_mining(logs_file_path):
             X_mini[:, 1] = to_7(X_mini[:, 1].astype(float))
             X_mini_cluster[:, 0] = to_24(X_mini_cluster[:, 0].astype(float))
             X_mini_cluster[:, 1] = to_7(X_mini_cluster[:, 1].astype(float))
-            write_habit(X_mini, labels)
+
+            write_habit(X_mini, labels,core_samples_mask)
             # Plot AP
             # plot_AP(X_mini_cluster,cluster_centers_indices,labels)
             # plot dbscan
