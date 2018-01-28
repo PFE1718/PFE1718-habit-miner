@@ -519,7 +519,7 @@ def dataFromFile(fname):
         yield record
 
 
-def get_habits(logs_file_path='logs.json', min_supp=0.05, min_confidence=0.8):
+def run_apriori(logs_file_path='logs.json', min_supp=0.05, min_confidence=0.8):
     hashes_temp = []
     table_csv = []
     date_time_obj0 = datetime.strptime('2018-01-01 00:00:00.0', '%Y-%m-%d %H:%M:%S.%f')
