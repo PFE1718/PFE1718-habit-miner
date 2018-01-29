@@ -373,7 +373,6 @@ def process_mining(logs_file_path):
             # plot_AP(X_mini_cluster,cluster_centers_indices,labels)
             # plot dbscan
 
-
     LOG.info("processing finished")
 
     run_apriori(logs_file_path)
@@ -521,6 +520,7 @@ def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
     hashes_temp = []
     table_csv = []
     date_time_obj0 = datetime.strptime('2018-01-01 00:00:00.0', '%Y-%m-%d %H:%M:%S.%f')
+    habit_manager = HabitsManager()
 
     # Open logs and put them in a list, same line if consequent logs are within 5 minutes interval
     with open(logs_file_path) as json_data:
@@ -593,7 +593,7 @@ def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
                 'parameters': json.loads(intent)['parameters']
             }
             intents.append(intent)
-        # register_habit("skill", intents)
+        habit_manager.register_habit("skill", intents)
         print intents
         intents = []
     os.remove('/opt/mycroft/habits/inputApriori.csv')
