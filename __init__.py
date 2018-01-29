@@ -213,9 +213,7 @@ def read_json(logs_file_path):
     # Open Json
     for line in open(logs_file_path, 'r+'):
         data.append(json.loads(line))
-    parsed = json.loads(json.dumps(data))
-    print(parsed[0])
-    return parsed
+    return data
 
 
 # Parse json and extract variables variables
@@ -334,11 +332,21 @@ def write_habit(X, labels,core_samples_mask_dbscan):
 
 
 def process_mining(logs_file_path):
-    # READ DATA
-    raw_data = read_json(logs_file_path)
-    X = parse_json(raw_data)
-    # Take hour and day for clustering
-    X_cluster = X[:, [0, 1]]
+    # READ DATAimport sys
+
+    try:
+        raw_data = read_json(logs_file_path)
+        X = parse_json(raw_data)
+        # Take hour and day for clustering
+        X_cluster = X[:, [0, 1]]
+    except IOError as e:
+        print "I/O error({0}): {1}".format(e.errno, e.strerror)
+    except ValueError:
+        print "Could not convert data to an integer."
+    except:
+        print "Unexpected error, exiting habit miner"
+        return -1
+
 
     # compute dbscan per id
     unique_ids = extract_ids(X)
