@@ -72,15 +72,6 @@ class HabitsManager(object):
 
         for old_habit in old_habits:
             for i in range(len(old_habit['intents'])):
-                LOG.info('utterance')
-                LOG.info(old_habit['intents'][i]['last_utterance'])
-                LOG.info('---------------------------------------------')
-                LOG.info(utterance)
-                LOG.info('---------------------------------------------')
-                LOG.info('days')
-                LOG.info(days)
-                LOG.info('---------------------------------------------')
-                LOG.info(old_habit['days'])
                 if(utterance is old_habit['intents'][i]['last_utterance']
                     # Compare hours only
                     #and time.split(":")[0] != old_habit['time'].split(":")[0]
