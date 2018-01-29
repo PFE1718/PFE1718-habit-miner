@@ -68,16 +68,25 @@ class HabitsManager(object):
         """returns true if a habit with same
         trigger_type,time and days alreasy exists,
         returns False if not"""
-        old_habits = json.load(open(self.habits_file_path))
+        old_habits = self.get_all_habits()
 
         for old_habit in old_habits:
-            for i in range(len(old_habit['intents'])):
-                if(utterance is old_habit['intents'][i]['last_utterance']
-                    # Compare hours only
-                    #and time.split(":")[0] != old_habit['time'].split(":")[0]
-                    and int(days) is old_habit['days']):
+            for oi in old_habit['intents']:
+                LOG.info('---------------------------------------------')
+                LOG.info('---------------------------------------------')
+                LOG.info('utterance')
+                LOG.info('oi:%s',str(oi['last_utterance']))
+                LOG.info('---------------------------------------------')
+                LOG.info('new:%s',str(utterance))
+                LOG.info('---------------------------------------------')
+                LOG.info('days')
+                LOG.info(str(old_habit['days']))
+                LOG.info(str(int(float(days))))
+                LOG.info('---------------------------------------------')
+                if((str(utterance) in str(oi['last_utterance'])) and (str(int(float(days))) is str(old_habit['days']))):
+                    LOG.info("OLD HABIT FOUND")
                     return True
-
+        LOG.info("NO HABIT FOUND")
         return False
 
     def register_habit(self, trigger_type, intents, t=None, days=None,
@@ -319,6 +328,7 @@ def write_habit(X, labels,core_samples_mask_dbscan):
                 if not my_habit_manager.check_habit_presence(str(X[0, 5]),
                                                              str(hour_moy) + ":" + str(min_moy),
                                                              str(day)):
+                    LOG.info("NEW CLUSTER WRITTEN")
                     my_habit_manager.register_habit("time", [
                         {
                             "name": str(X[0, 3]),
@@ -327,6 +337,9 @@ def write_habit(X, labels,core_samples_mask_dbscan):
                         }
                     ], str(int(hour_moy)) + ":" + str(int(min_moy)), int(day), str(interval_max))
                     num_clusters = num_clusters + 1
+                else:
+                    LOG.info("NO CLUSTER WRITTEN")
+
 
     return num_clusters
 
@@ -379,6 +392,8 @@ def process_mining(logs_file_path):
             # Plot AP
             # plot_AP(X_mini_cluster,cluster_centers_indices,labels)
             # plot dbscan
+            name = X_mini[0, 2]
+            #plot_DBSCAN(X_mini_cluster, core_samples_mask, labels, name)
     LOG.info("nb nb_clusters:%d",nb_clusters)
     LOG.info("processing finished")
 
@@ -401,3 +416,5 @@ def compute_DBSCAN(features):
     core_samples_mask[db.core_sample_indices_] = True
     labels = db.labels_
     return core_samples_mask, labels
+
+
