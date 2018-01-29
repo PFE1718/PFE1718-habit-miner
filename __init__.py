@@ -72,17 +72,6 @@ class HabitsManager(object):
 
         for old_habit in old_habits:
             for oi in old_habit['intents']:
-                LOG.info('---------------------------------------------')
-                LOG.info('---------------------------------------------')
-                LOG.info('utterance')
-                LOG.info('oi:%s',str(oi['last_utterance']))
-                LOG.info('---------------------------------------------')
-                LOG.info('new:%s',str(utterance))
-                LOG.info('---------------------------------------------')
-                LOG.info('days')
-                LOG.info(str(old_habit['days']))
-                LOG.info(str(int(float(days))))
-                LOG.info('---------------------------------------------')
                 if((str(utterance) in str(oi['last_utterance'])) and (str(int(float(days))) is str(old_habit['days']))):
                     LOG.info("OLD HABIT FOUND")
                     return True
@@ -308,6 +297,7 @@ def write_habit(X, labels,core_samples_mask_dbscan):
     # Black removed and is used for noise instead.
     unique_labels = set(labels)
     num_clusters = 0
+
     for k in unique_labels:
         #Check if cluster
         if k >=0:
@@ -318,15 +308,20 @@ def write_habit(X, labels,core_samples_mask_dbscan):
             if (len(xy[:, 1]) > 1):
                 day = round(mean(xy[:, 0].astype(float)), 0)
                 hour = xy[:, 1].astype(float).astype(int)
-                minute = xy[:, 1].astype(float) - hour
+                minute = (xy[:, 1].astype(float) - hour)
+                minute = map(lambda x: x * 60, minute)
+                # calculate mean hour and minute of the cluster
                 hour_moy = float(mean(hour))
-                min_moy = float(mean(minute))
-
+                min_moy = int(float(mean(minute)))
+                # Round time to 5 minutes
+                min_moy_rounded = float(float(min_moy) / 60.0)
+                min_moy_rounded = int(round(min_moy_rounded * 12) * 5)
+                # Calculate inteval max to detect habit
                 interval_max = max(np.absolute((hour_moy * 60 + min_moy) - hour * 60 - minute))
                 # Register ID, params, intents, days, hours
                 my_habit_manager = HabitsManager()
                 if not my_habit_manager.check_habit_presence(str(X[0, 5]),
-                                                             str(hour_moy) + ":" + str(min_moy),
+                                                             str(hour_moy) + ":" + str(min_moy_rounded),
                                                              str(day)):
                     LOG.info("NEW CLUSTER WRITTEN")
                     my_habit_manager.register_habit("time", [
@@ -335,7 +330,7 @@ def write_habit(X, labels,core_samples_mask_dbscan):
                             "parameters": X[0, 4],
                             "last_utterance": str(X[0, 5])
                         }
-                    ], str(int(hour_moy)) + ":" + str(int(min_moy)), int(day), str(interval_max))
+                    ], str(int(hour_moy)) + ":" + str(int(min_moy_rounded)), int(day), str(interval_max))
                     num_clusters = num_clusters + 1
                 else:
                     LOG.info("NO CLUSTER WRITTEN")
