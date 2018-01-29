@@ -271,7 +271,7 @@ def date_to_days(date):
     """
     This function returns day of week in range 1-10
     """
-    day_t = (float(date.day) * 10.0) / 31.0
+    day_t = (float(date.weekday()) *10.0)/6.0
     return day_t
 
 
@@ -339,17 +339,13 @@ def process_mining(logs_file_path):
         X = parse_json(raw_data)
         # Take hour and day for clustering
         X_cluster = X[:, [0, 1]]
-    except IOError as e:
-        print "I/O error({0}): {1}".format(e.errno, e.strerror)
-    except ValueError:
-        print "Could not convert data to an integer."
     except:
         print "Unexpected error, exiting habit miner"
         return -1
 
 
     # compute dbscan per id
-    unique_ids = extract_ids(X)
+    unique_ids = extract_ids(X[:,2])
 
     for i in unique_ids:
         # even_numbers = list(filter(lambda x: x % 2 == 0, fibonacci))
@@ -393,7 +389,7 @@ def compute_DBSCAN(features):
     features = StandardScaler().fit_transform(features.astype(float))
     # #############################################################################
     # Compute DBSCAN
-    db = DBSCAN(eps=0.5, min_samples=4).fit(features)
+    db = DBSCAN(eps=0.25, min_samples=4).fit(features)
     core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
     core_samples_mask[db.core_sample_indices_] = True
     labels = db.labels_
