@@ -64,17 +64,29 @@ class HabitsManager(object):
         """Return one particular habit of the user"""
         return self.habits[habit_id]
 
-    def check_habit_presence(self, trigger_type, time, days):
+    def check_habit_presence(self, utterance, time, days):
         """returns true if a habit with same
         trigger_type,time and days alreasy exists,
         returns False if not"""
-        old_habits = self.get_all_habits()
+        old_habits = json.load(open(self.habits_file_path))
+
         for old_habit in old_habits:
-            if(trigger_type is old_habit['intents'][0]['name']
-                # Compare hours only
-                #and time.split(":")[0] != old_habit['time'].split(":")[0]
-                and days is old_habit['days']):
-                return True
+            for i in range(len(old_habit['intents'])):
+                LOG.info('utterance')
+                LOG.info(old_habit['intents'][i]['last_utterance'])
+                LOG.info('---------------------------------------------')
+                LOG.info(utterance)
+                LOG.info('---------------------------------------------')
+                LOG.info('days')
+                LOG.info(days)
+                LOG.info('---------------------------------------------')
+                LOG.info(old_habit['days'])
+                if(utterance is old_habit['intents'][i]['last_utterance']
+                    # Compare hours only
+                    #and time.split(":")[0] != old_habit['time'].split(":")[0]
+                    and int(days) is old_habit['days']):
+                    return True
+
         return False
 
     def register_habit(self, trigger_type, intents, t=None, days=None,
@@ -295,6 +307,7 @@ def write_habit(X, labels,core_samples_mask_dbscan):
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
     # Black removed and is used for noise instead.
     unique_labels = set(labels)
+    num_clusters = 0
     for k in unique_labels:
         #Check if cluster
         if k >=0:
@@ -312,7 +325,7 @@ def write_habit(X, labels,core_samples_mask_dbscan):
                 interval_max = max(np.absolute((hour_moy * 60 + min_moy) - hour * 60 - minute))
                 # Register ID, params, intents, days, hours
                 my_habit_manager = HabitsManager()
-                if not my_habit_manager.check_habit_presence(str(X[0, 2]),
+                if not my_habit_manager.check_habit_presence(str(X[0, 5]),
                                                              str(hour_moy) + ":" + str(min_moy),
                                                              str(day)):
                     my_habit_manager.register_habit("time", [
@@ -321,8 +334,10 @@ def write_habit(X, labels,core_samples_mask_dbscan):
                             "parameters": X[0, 4],
                             "last_utterance": str(X[0, 5])
                         }
-                    ], str(int(hour_moy)) + ":" + str(int(min_moy)), [str(day)], str(interval_max))
+                    ], str(int(hour_moy)) + ":" + str(int(min_moy)), int(day), str(interval_max))
+                    num_clusters = num_clusters + 1
 
+    return num_clusters
 
 
 
@@ -346,6 +361,7 @@ def process_mining(logs_file_path):
 
     # compute dbscan per id
     unique_ids = extract_ids(X[:,2])
+    nb_clusters = 0
 
     for i in unique_ids:
         # even_numbers = list(filter(lambda x: x % 2 == 0, fibonacci))
@@ -368,11 +384,11 @@ def process_mining(logs_file_path):
             X_mini_cluster[:, 0] = to_24(X_mini_cluster[:, 0].astype(float))
             X_mini_cluster[:, 1] = to_7(X_mini_cluster[:, 1].astype(float))
 
-            write_habit(X_mini, labels,core_samples_mask)
+            nb_clusters = write_habit(X_mini, labels,core_samples_mask) + nb_clusters
             # Plot AP
             # plot_AP(X_mini_cluster,cluster_centers_indices,labels)
             # plot dbscan
-
+    LOG.info("nb nb_clusters:%d",nb_clusters)
     LOG.info("processing finished")
 
 
