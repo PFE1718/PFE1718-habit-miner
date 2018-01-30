@@ -323,7 +323,7 @@ def write_habit(X, labels,core_samples_mask_dbscan):
                 min_moy_rounded = float(float(min_moy) / 60.0)
                 min_moy_rounded = int(round(min_moy_rounded * 12) * 5)
                 # Calculate inteval max to detect habit
-                interval_max = max(np.absolute((hour_moy * 60 + min_moy) - hour * 60 - minute))
+                interval_max = np.ceil(max(np.absolute((hour_moy * 60 + min_moy) - hour * 60 - minute)))
                 # Register ID, params, intents, days, hours
                 my_habit_manager = HabitsManager()
                 if not my_habit_manager.check_habit_presence(str(X[0, 5]),
