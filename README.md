@@ -9,13 +9,10 @@ It can detect two types of habits :
 * Group based habits (i.e launching a group of skills very frequently)
 
 ## Current state
-
-## Working features:
+ Working features:
  - time habits and group habits working and passed on to the habits automation system
 
-Known issues:
- - 
- 
-## TODO:
+## Known issues:
+ TODO:
  - Check that we are not adding two times the same habit to the system
  - Debug
