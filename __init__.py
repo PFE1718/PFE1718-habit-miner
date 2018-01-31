@@ -543,10 +543,11 @@ def check_skill_habit(habit):
     for intent in habit:
         new_utterance.append(json.loads(intent)['utterance'])
 
-    with open('habits.json') as json_data:
+    with open('/opt/mycroft/habits/habits.json') as json_data:
         data = json.load(json_data)
-        for i in data[0]['intents']:
-            old_utterance.append(i['last_utterance'])
+        if len(data) > 0:
+            for i in data[0]['intents']:
+                old_utterance.append(i['last_utterance'])
 
     return old_utterance == new_utterance
 
