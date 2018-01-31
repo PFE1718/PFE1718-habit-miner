@@ -106,15 +106,15 @@ class HabitsManager(object):
                             json.dump(self.habits, habits_file)
                         return 0
 
-                else:LOG.info('no habit found same day, new habit created')
+                    else:LOG.info('no habit found same day, new habit created')
             else:LOG.info('no habit found, new habit created')
             # register new habit
-            self.register_habit("time", intent, time, days, str(interval_max))
-            return 1
+        self.register_habit("time", [intent], time, [days], str(interval_max))
+        return 1
 
         # If array is empty, write habit
         LOG.info('habits empty, writing new one')
-        self.register_habit("time", [intent], time, days, str(interval_max))
+        self.register_habit("time", [intent], time, [days], str(interval_max))
         return 1
 
 
