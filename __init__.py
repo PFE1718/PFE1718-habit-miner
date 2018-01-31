@@ -537,6 +537,20 @@ def data_from_file(fname):
         yield record
 
 
+def check_skill_habit(habit):
+    new_utterance = []
+    old_utterance = []
+    for intent in habit:
+        new_utterance.append(json.loads(intent)['utterance'])
+
+    with open('habits.json') as json_data:
+        data = json.load(json_data)
+        for i in data[0]['intents']:
+            old_utterance.append(i['last_utterance'])
+
+    return old_utterance == new_utterance
+
+
 def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
     hashes_temp = []
     table_csv = []
@@ -600,7 +614,8 @@ def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
                     if hash == intent:
                         habit.append(json.dumps(data))
                         break
-        habits.append(habit)
+        if not check_skill_habit(habit):
+            habits.append(habit)
         habit = []
 
     # format habits as expected and register them
