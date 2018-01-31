@@ -537,21 +537,6 @@ def data_from_file(fname):
         yield record
 
 
-def check_skill_habit(habit):
-    new_utterance = []
-    old_utterance = []
-    for intent in habit:
-        new_utterance.append(json.loads(intent)['utterance'])
-
-    with open('/opt/mycroft/habits/habits.json') as json_data:
-        data = json.load(json_data)
-        if len(data) > 0:
-            for i in data[0]['intents']:
-                old_utterance.append(i['last_utterance'])
-
-    return old_utterance == new_utterance
-
-
 def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
     hashes_temp = []
     table_csv = []
@@ -579,6 +564,7 @@ def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
 
     # Converts logs list to csv so that we can executre apriori algorithm on them
     with open('/opt/mycroft/habits/inputApriori.csv', 'w') as fp:
+        LOG.info('opened')
         writer = csv.writer(fp, delimiter=',')
         for row in table_csv:
             writer.writerow(row)
@@ -631,6 +617,23 @@ def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
             }
             intents.append(intent)
         habit_manager.register_habit("skill", intents)
-        print intents
         intents = []
+
     os.remove('/opt/mycroft/habits/inputApriori.csv')
+
+
+def check_skill_habit(habit):
+    new_utterance = []
+    old_utterance = []
+    for intent in habit:
+        new_utterance.append(json.loads(intent)['utterance'])
+
+    with open('/opt/mycroft/habits/habits.json') as json_data:
+        data = json.load(json_data)
+        for i in data:
+            for intent in i['intents']:
+                old_utterance.append(intent['last_utterance'])
+            if old_utterance == new_utterance:
+                return True
+        old_utterance = []
+    return False
