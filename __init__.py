@@ -21,7 +21,7 @@ import os
 import hashlib
 
 from datetime import datetime, timedelta
-
+import itertools
 from itertools import chain, combinations
 from collections import defaultdict
 
@@ -297,20 +297,25 @@ def time_to_hours(date):
     return float(td_t)
 
 
+def extract_key(v):
+    return v[0]
+
 # Write new habit
-def write_habit(X, labels,core_samples_mask_dbscan):
+def write_habit(X, labels,core_samples_mask_dbscan,my_habit_manager):
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
     # Black removed and is used for noise instead.
     unique_labels = set(labels)
     num_clusters = 0
+    temp_habits = my_habit_manager.get_all_habits()
 
     for k in unique_labels:
         #Check if cluster
         if k >=0:
 
             class_member_mask = (labels == k)
-
             xy = X[class_member_mask & core_samples_mask_dbscan]
+
+
             if (len(xy[:, 1]) > 1):
                 day = round(mean(xy[:, 0].astype(float)), 0)
                 hour = xy[:, 1].astype(float).astype(int)
@@ -324,25 +329,42 @@ def write_habit(X, labels,core_samples_mask_dbscan):
                 min_moy_rounded = int(round(min_moy_rounded * 12) * 5)
                 # Calculate inteval max to detect habit
                 interval_max = np.ceil(max(np.absolute((hour_moy * 60 + min_moy) - hour * 60 - minute)))
+                time = str(hour_moy) + ":" + str(min_moy_rounded)
+
+                #Fusion habits
+                intents = [
+                        {
+                            "name": str(xy[0, 3]),
+                            "parameters": xy[0, 4],
+                            "last_utterance": str(xy[0, 5])
+                        }
+                    ]
+                # Fusion habits with same day and hour
+                """for temp_habit in my_habit_manager.get_all_habits():
+                        #print ('----------------')
+                        if (
+                            ((str(int(float(day))) in str(temp_habit['days'][0]))) and
+                            (str(time) in str(temp_habit['time'])
+                             )):
+                                intents+= temp_habit['intents']
+                                LOG.info('Fusion elements')
+                                LOG.info(intents)
+"""
                 # Register ID, params, intents, days, hours
-                my_habit_manager = HabitsManager()
                 if not my_habit_manager.check_habit_presence(str(X[0, 5]),
-                                                             str(hour_moy) + ":" + str(min_moy_rounded),
+                                                             time,
                                                              str(day)):
                     LOG.info("NEW CLUSTER WRITTEN")
-                    my_habit_manager.register_habit("time", [
-                        {
-                            "name": str(X[0, 3]),
-                            "parameters": X[0, 4],
-                            "last_utterance": str(X[0, 5])
-                        }
-                    ], str(int(hour_moy)) + ":" + str(int(min_moy_rounded)), int(day), str(interval_max))
+                    my_habit_manager.register_habit("time", intents, time, [int(day)], str(interval_max))
                     num_clusters = num_clusters + 1
                 else:
                     LOG.info("NO CLUSTER WRITTEN")
 
 
     return num_clusters
+
+def fusion_habits():
+    return
 
 
 # MAIN STEPS
@@ -365,9 +387,10 @@ def process_mining(logs_file_path):
     # compute dbscan per id
     unique_ids = extract_ids(X[:,2])
     nb_clusters = 0
+    my_habit_manager = HabitsManager()
 
+    #clusterize each application
     for i in unique_ids:
-        # even_numbers = list(filter(lambda x: x % 2 == 0, fibonacci))
         X_mini = X[X[:, 2] == i]
         if (X_mini[:, 0].shape[0] > 2):
             X_mini_cluster = X_mini[:, [0, 1]]
@@ -386,8 +409,13 @@ def process_mining(logs_file_path):
             X_mini[:, 1] = to_7(X_mini[:, 1].astype(float))
             X_mini_cluster[:, 0] = to_24(X_mini_cluster[:, 0].astype(float))
             X_mini_cluster[:, 1] = to_7(X_mini_cluster[:, 1].astype(float))
-
-            nb_clusters = write_habit(X_mini, labels,core_samples_mask) + nb_clusters
+            LOG.info('X_mini')
+            LOG.info(X_mini)
+            LOG.info('labels')
+            LOG.info(labels)
+            LOG.info('core_samples')
+            LOG.info(core_samples_mask)
+            nb_clusters = write_habit(X_mini, labels,core_samples_mask,my_habit_manager) + nb_clusters
             # Plot AP
             # plot_AP(X_mini_cluster,cluster_centers_indices,labels)
             # plot dbscan
@@ -396,8 +424,8 @@ def process_mining(logs_file_path):
     LOG.info("nb nb_clusters:%d",nb_clusters)
     LOG.info("processing finished")
 
-    run_apriori(logs_file_path)
-    LOG.info("apriori finished")
+    #run_apriori(logs_file_path)
+    #LOG.info("apriori finished")
 
 
 # MODELS
