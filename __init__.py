@@ -93,27 +93,22 @@ class HabitsManager(object):
         for old_habit in self.habits:
             # If habit with same dates and time exists
             if (days in str(old_habit['days'])):
-                for oi in old_habit['intents']:
-                    # if habit with same name exists
-                    if((intent['last_utterance'] in str(oi['last_utterance']))):
-                        LOG.info("old habit found, no habit written")
-                        return 0
-                    # fusion if habits dont have same utterance
-                    elif(str(time) in str(old_habit['time'])):
-                        old_habit['intents'] = self.fusion_habits(intent,old_habit['intents'])
-                        # Write fusionned habit
-                        with open(self.habits_file_path, 'w') as habits_file:
-                            json.dump(self.habits, habits_file)
-                        return 0
+                # if habit with same name exists
+                if((str(intent['last_utterance']) in
+                        map (lambda x:x['last_utterance'],old_habit['intents']))):
+                    LOG.info("old habit found, no habit written")
+                    return 0
+                # fusion if habits dont have same utterance
+                elif(str(time) in str(old_habit['time'])):
+                    old_habit['intents'] = self.fusion_habits(intent,old_habit['intents'])
+                    # Write fusionned habit
+                    with open(self.habits_file_path, 'w') as habits_file:
+                        json.dump(self.habits, habits_file)
+                    return 0
 
-                    else:LOG.info('no habit found same day, new habit created')
+                else:LOG.info('no habit found same day, new habit created')
             else:LOG.info('no habit found, new habit created')
-            # register new habit
-        self.register_habit("time", [intent], time, [days], str(interval_max))
-        return 1
-
-        # If array is empty, write habit
-        LOG.info('habits empty, writing new one')
+        # register new habit
         self.register_habit("time", [intent], time, [days], str(interval_max))
         return 1
 
