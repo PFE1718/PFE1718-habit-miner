@@ -1,22 +1,19 @@
 # habit-miner skill
+This skill is made to work with the full Habits Automation project https://github.com/PFE1718/mycroft-skills-automation.
 
-The habit-miner skill is part of a project aiming to detect user habits and allow their automation.
-This skill allows the user to automate some of his/her habits that Mycroft has detected and handles the automation.
-
-The habit detection is done by two complementary skills:
-- The skill-listener, that logs the user actions locally
-- The habit-miner, that uses Data Mining to extract the habits from the logs
-
-The automation-handler skill then interacts with the user to automate habits.
-
+Its role is to go through user logs and analyse them. By implementing machine learning algorithms, it can then detect most frequent user habits. They are then passed to the [habits-automation](https://github.com/PFE1718/mycroft-automation-handler) skill.
+It can detect two types of habits :
+..* Time based habits (i.e launching the same skill regularly at the same time of the day)
+..* Group based habits (i.e launching a group of skills very frequently)
 
 ## Current state
 
 Working features:
- - ...
+ - time habits and group habits working and passed on to the habits automation system
+ - 
 
 Known issues:
- - ...
+ - 
 
 TODO:
- - ...
+ - 
