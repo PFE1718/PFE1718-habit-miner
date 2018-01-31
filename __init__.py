@@ -70,19 +70,54 @@ class HabitsManager(object):
         """Return one particular habit of the user"""
         return self.habits[habit_id]
 
-    def check_habit_presence(self, utterance, time, days):
+    def fusion_habits(self,intent,old_intent):
+        LOG.info(intent['last_utterance'])
+        old_intent.append(intent)
+        LOG.info('FUSION')
+        return old_intent
+
+    def check_habit_presence(self, X, time, days,interval_max):
         """returns true if a habit with same
         trigger_type,time and days alreasy exists,
         returns False if not"""
+        # Init variables
+        nb_habits = 0
+        hv = {'utterance':str(X[0, 5]),'name':str(X[0, 3]),'parameters':X[0, 4]}
         old_habits = self.get_all_habits()
+        intent = {
+                "name": hv['name'],
+                "parameters": hv['parameters'],
+                "last_utterance": hv['utterance']
+            }
+        # check habit presence
+        for old_habit in self.habits:
+            # If habit with same dates and time exists
+            if (days in str(old_habit['days'])):
+                for oi in old_habit['intents']:
+                    # if habit with same name exists
+                    if((intent['last_utterance'] in str(oi['last_utterance']))):
+                        LOG.info("old habit found, no habit written")
+                        return 0
+                    # fusion if habits dont have same utterance
+                    elif(str(time) in str(old_habit['time'])):
+                        old_habit['intents'] = self.fusion_habits(intent,old_habit['intents'])
+                        # Write fusionned habit
+                        with open(self.habits_file_path, 'w') as habits_file:
+                            json.dump(self.habits, habits_file)
+                        return 0
 
-        for old_habit in old_habits:
-            for oi in old_habit['intents']:
-                if((str(utterance) in str(oi['last_utterance'])) and (str(int(float(days))) is str(old_habit['days']))):
-                    LOG.info("OLD HABIT FOUND")
-                    return True
-        LOG.info("NO HABIT FOUND")
-        return False
+                else:LOG.info('no habit found same day, new habit created')
+            else:LOG.info('no habit found, new habit created')
+            # register new habit
+            self.register_habit("time", intent, time, days, str(interval_max))
+            return 1
+
+        # If array is empty, write habit
+        LOG.info('habits empty, writing new one')
+        self.register_habit("time", [intent], time, days, str(interval_max))
+        return 1
+
+
 
     def register_habit(self, trigger_type, intents, t=None, days=None,
                        interval_max=None):
@@ -312,34 +347,22 @@ def write_habit(X, labels,core_samples_mask_dbscan):
 
             xy = X[class_member_mask & core_samples_mask_dbscan]
             if (len(xy[:, 1]) > 1):
-                day = round(mean(xy[:, 0].astype(float)), 0)
+                day = int(float(round(mean(xy[:, 0].astype(float)), 0)))
                 hour = xy[:, 1].astype(float).astype(int)
                 minute = (xy[:, 1].astype(float) - hour)
                 minute = map(lambda x: x * 60, minute)
                 # calculate mean hour and minute of the cluster
-                hour_moy = float(mean(hour))
+                hour_moy = int(float(mean(hour)))
                 min_moy = int(float(mean(minute)))
                 # Round time to 5 minutes
                 min_moy_rounded = float(float(min_moy) / 60.0)
                 min_moy_rounded = int(round(min_moy_rounded * 12) * 5)
                 # Calculate inteval max to detect habit
                 interval_max = np.ceil(max(np.absolute((hour_moy * 60 + min_moy) - hour * 60 - minute)))
+                time = str(hour_moy) + ":" + str(min_moy_rounded)
                 # Register ID, params, intents, days, hours
                 my_habit_manager = HabitsManager()
-                if not my_habit_manager.check_habit_presence(str(X[0, 5]),
-                                                             str(hour_moy) + ":" + str(min_moy_rounded),
-                                                             str(day)):
-                    LOG.info("NEW CLUSTER WRITTEN")
-                    my_habit_manager.register_habit("time", [
-                        {
-                            "name": str(X[0, 3]),
-                            "parameters": X[0, 4],
-                            "last_utterance": str(X[0, 5])
-                        }
-                    ], str(int(hour_moy)) + ":" + str(int(min_moy_rounded)), int(day), str(interval_max))
-                    num_clusters = num_clusters + 1
-                else:
-                    LOG.info("NO CLUSTER WRITTEN")
+                num_clusters = my_habit_manager.check_habit_presence(X,time,str(day),interval_max) + num_clusters
 
 
     return num_clusters
@@ -396,8 +419,8 @@ def process_mining(logs_file_path):
     LOG.info("nb nb_clusters:%d",nb_clusters)
     LOG.info("processing finished")
 
-    run_apriori(logs_file_path)
-    LOG.info("apriori finished")
+    #run_apriori(logs_file_path)
+    #LOG.info("apriori finished")
 
 
 # MODELS
