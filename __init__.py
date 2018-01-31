@@ -21,7 +21,7 @@ import os
 import hashlib
 
 from datetime import datetime, timedelta
-import itertools
+
 from itertools import chain, combinations
 from collections import defaultdict
 
@@ -70,19 +70,54 @@ class HabitsManager(object):
         """Return one particular habit of the user"""
         return self.habits[habit_id]
 
-    def check_habit_presence(self, utterance, time, days):
+    def fusion_habits(self,intent,old_intent):
+        LOG.info(intent['last_utterance'])
+        old_intent.append(intent)
+        LOG.info('FUSION')
+        return old_intent
+
+    def check_habit_presence(self, X, time, days,interval_max):
         """returns true if a habit with same
         trigger_type,time and days alreasy exists,
         returns False if not"""
+        # Init variables
+        nb_habits = 0
+        hv = {'utterance':str(X[0, 5]),'name':str(X[0, 3]),'parameters':X[0, 4]}
         old_habits = self.get_all_habits()
+        intent = {
+                "name": hv['name'],
+                "parameters": hv['parameters'],
+                "last_utterance": hv['utterance']
+            }
+        # check habit presence
+        for old_habit in self.habits:
+            # If habit with same dates and time exists
+            if (days in str(old_habit['days'])):
+                for oi in old_habit['intents']:
+                    # if habit with same name exists
+                    if((intent['last_utterance'] in str(oi['last_utterance']))):
+                        LOG.info("old habit found, no habit written")
+                        return 0
+                    # fusion if habits dont have same utterance
+                    elif(str(time) in str(old_habit['time'])):
+                        old_habit['intents'] = self.fusion_habits(intent,old_habit['intents'])
+                        # Write fusionned habit
+                        with open(self.habits_file_path, 'w') as habits_file:
+                            json.dump(self.habits, habits_file)
+                        return 0
 
-        for old_habit in old_habits:
-            for oi in old_habit['intents']:
-                if((str(utterance) in str(oi['last_utterance'])) and (str(int(float(days))) is str(old_habit['days']))):
-                    LOG.info("OLD HABIT FOUND")
-                    return True
-        LOG.info("NO HABIT FOUND")
-        return False
+                else:LOG.info('no habit found same day, new habit created')
+            else:LOG.info('no habit found, new habit created')
+            # register new habit
+            self.register_habit("time", intent, time, days, str(interval_max))
+            return 1
+
+        # If array is empty, write habit
+        LOG.info('habits empty, writing new one')
+        self.register_habit("time", [intent], time, days, str(interval_max))
+        return 1
+
+
 
     def register_habit(self, trigger_type, intents, t=None, days=None,
                        interval_max=None):
@@ -297,32 +332,27 @@ def time_to_hours(date):
     return float(td_t)
 
 
-def extract_key(v):
-    return v[0]
-
 # Write new habit
-def write_habit(X, labels,core_samples_mask_dbscan,my_habit_manager):
+def write_habit(X, labels,core_samples_mask_dbscan):
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
     # Black removed and is used for noise instead.
     unique_labels = set(labels)
     num_clusters = 0
-    temp_habits = my_habit_manager.get_all_habits()
 
     for k in unique_labels:
         #Check if cluster
         if k >=0:
 
             class_member_mask = (labels == k)
+
             xy = X[class_member_mask & core_samples_mask_dbscan]
-
-
             if (len(xy[:, 1]) > 1):
-                day = round(mean(xy[:, 0].astype(float)), 0)
+                day = int(float(round(mean(xy[:, 0].astype(float)), 0)))
                 hour = xy[:, 1].astype(float).astype(int)
                 minute = (xy[:, 1].astype(float) - hour)
                 minute = map(lambda x: x * 60, minute)
                 # calculate mean hour and minute of the cluster
-                hour_moy = float(mean(hour))
+                hour_moy = int(float(mean(hour)))
                 min_moy = int(float(mean(minute)))
                 # Round time to 5 minutes
                 min_moy_rounded = float(float(min_moy) / 60.0)
@@ -330,41 +360,12 @@ def write_habit(X, labels,core_samples_mask_dbscan,my_habit_manager):
                 # Calculate inteval max to detect habit
                 interval_max = np.ceil(max(np.absolute((hour_moy * 60 + min_moy) - hour * 60 - minute)))
                 time = str(hour_moy) + ":" + str(min_moy_rounded)
-
-                #Fusion habits
-                intents = [
-                        {
-                            "name": str(xy[0, 3]),
-                            "parameters": xy[0, 4],
-                            "last_utterance": str(xy[0, 5])
-                        }
-                    ]
-                # Fusion habits with same day and hour
-                """for temp_habit in my_habit_manager.get_all_habits():
-                        #print ('----------------')
-                        if (
-                            ((str(int(float(day))) in str(temp_habit['days'][0]))) and
-                            (str(time) in str(temp_habit['time'])
-                             )):
-                                intents+= temp_habit['intents']
-                                LOG.info('Fusion elements')
-                                LOG.info(intents)
-"""
                 # Register ID, params, intents, days, hours
-                if not my_habit_manager.check_habit_presence(str(X[0, 5]),
-                                                             time,
-                                                             str(day)):
-                    LOG.info("NEW CLUSTER WRITTEN")
-                    my_habit_manager.register_habit("time", intents, time, [int(day)], str(interval_max))
-                    num_clusters = num_clusters + 1
-                else:
-                    LOG.info("NO CLUSTER WRITTEN")
+                my_habit_manager = HabitsManager()
+                num_clusters = my_habit_manager.check_habit_presence(X,time,str(day),interval_max) + num_clusters
 
 
     return num_clusters
-
-def fusion_habits():
-    return
 
 
 # MAIN STEPS
@@ -387,10 +388,9 @@ def process_mining(logs_file_path):
     # compute dbscan per id
     unique_ids = extract_ids(X[:,2])
     nb_clusters = 0
-    my_habit_manager = HabitsManager()
 
-    #clusterize each application
     for i in unique_ids:
+        # even_numbers = list(filter(lambda x: x % 2 == 0, fibonacci))
         X_mini = X[X[:, 2] == i]
         if (X_mini[:, 0].shape[0] > 2):
             X_mini_cluster = X_mini[:, [0, 1]]
@@ -409,13 +409,8 @@ def process_mining(logs_file_path):
             X_mini[:, 1] = to_7(X_mini[:, 1].astype(float))
             X_mini_cluster[:, 0] = to_24(X_mini_cluster[:, 0].astype(float))
             X_mini_cluster[:, 1] = to_7(X_mini_cluster[:, 1].astype(float))
-            LOG.info('X_mini')
-            LOG.info(X_mini)
-            LOG.info('labels')
-            LOG.info(labels)
-            LOG.info('core_samples')
-            LOG.info(core_samples_mask)
-            nb_clusters = write_habit(X_mini, labels,core_samples_mask,my_habit_manager) + nb_clusters
+
+            nb_clusters = write_habit(X_mini, labels,core_samples_mask) + nb_clusters
             # Plot AP
             # plot_AP(X_mini_cluster,cluster_centers_indices,labels)
             # plot dbscan
