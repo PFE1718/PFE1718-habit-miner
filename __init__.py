@@ -73,20 +73,19 @@ class HabitsManager(object):
     def check_skill_habit(self, new_habit):
         """
         Verify if skill habit is already present
-        :return:
         """
-        new_utterances = []
+
         old_habits = self.get_all_habits()
-        new_intents = []
-        LOG.info('new habit')
-        LOG.info(new_habit)
         new_utterances=[str(utt['utterance']) for utt in new_habit]
+        # Check utterances for each old habit
         for ohabit in old_habits:
+            # Extract utterances from old habit
             old_utterances = [str(outt['last_utterance']) for outt in ohabit['intents']]
+            # Check if new utterances are in old utterances
             if set(new_utterances).issubset(set(old_utterances)):
-                LOG.info('HABIT FOUND')
+                LOG.info('skill habit already exists')
                 return True
-        LOG.info('NO HABIT FOUND')
+        LOG.info('skill habit does not exist')
         return False
 
     def check_habit_presence(self, utterance, time, days):
