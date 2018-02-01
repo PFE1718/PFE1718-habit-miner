@@ -81,11 +81,12 @@ class HabitsManager(object):
         # Check utterances for each old habit
         for ohabit in old_habits:
             # Extract utterances from old habit
-            old_utterances = [str(outt['last_utterance']) for outt in ohabit['intents']]
-            # Check if new utterances are in old utterances
-            if set(new_utterances).issubset(set(old_utterances)):
-                LOG.info('skill habit already exists')
-                return True
+            if ohabit['trigger_type'] in "skill":
+                old_utterances = [str(outt['last_utterance']) for outt in ohabit['intents']]
+                # Check if new utterances are in old utterances
+                if set(new_utterances).issubset(set(old_utterances)):
+                    LOG.info('skill habit already exists')
+                    return True
         LOG.info('skill habit does not exist')
         return False
 
@@ -95,11 +96,10 @@ class HabitsManager(object):
         LOG.info('FUSION')
         return old_intent
 
-    def check_habit_presence(self, utterance, time, days):
+    def check_habit_presence(self, X, time, days,interval_max):
         """returns true if a habit with same
         trigger_type,time and days alreasy exists,
         returns False if not"""
-        old_habits = self.get_all_habits()
 
         # Init variables
         intent = {
@@ -110,31 +110,35 @@ class HabitsManager(object):
         # check habit presence
         for old_habit in self.habits:
             # If habit with same dates and time exists
-            if (days in str(old_habit['days'])):
-                # if habit with same name exists
-                if ((
-                            str(intent['last_utterance']) in map(
-                                lambda x: x[
-                                    'last_utterance'], old_habit['intents']
-                        ))):
-                    LOG.info("old habit found, no habit written")
-                    return 0
-                # fusion if habits dont have same utterance
-                elif (str(time) in str(old_habit['time'])):
-                    old_habit['intents'] = self.fusion_habits(
-                        intent,
-                        old_habit['intents'])
+            if old_habit['trigger_type'] in "time":
+                if days in str(old_habit['days']):
+                    # if habit with same name exists
+                    if ((
+                                str(intent['last_utterance']) in map(
+                                    lambda x: x[
+                                        'last_utterance'], old_habit['intents']
+                            ))):
+                        LOG.info("old habit found, no habit written")
+                        return 0
+                    # fusion if habits dont have same utterance
+                    elif (str(time) in str(old_habit['time'])):
+                        old_habit['intents'] = self.fusion_habits(
+                            intent,
+                            old_habit['intents'])
 
-                    # Write fusionned habit
-                    with open(
-                            self.habits_file_path, 'w') as habits_file:
-                        json.dump(self.habits, habits_file)
-                    return 0
+                        # Write fusionned habit
+                        with open(
+                                self.habits_file_path, 'w') as habits_file:
+                            json.dump(self.habits, habits_file)
+                        return 0
 
+                    else:
+                        LOG.info('no habit found same day, new habit created')
                 else:
-                    LOG.info('no habit found same day, new habit created')
+                    LOG.info('no habit found, new habit created')
             else:
                 LOG.info('no habit found, new habit created')
+
         # register new habit
         self.register_habit("time", [intent], time, [days], str(interval_max))
         return 1
