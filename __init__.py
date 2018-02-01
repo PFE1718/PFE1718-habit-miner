@@ -71,17 +71,35 @@ class HabitsManager(object):
         """Return one particular habit of the user"""
         return self.habits[habit_id]
 
+    def check_skill_habit(self, new_habit):
+        """
+        Verify if skill habit is already present
+        """
+
+        old_habits = self.get_all_habits()
+        new_utterances=[str(utt['utterance']) for utt in new_habit]
+        # Check utterances for each old habit
+        for ohabit in old_habits:
+            # Extract utterances from old habit
+            old_utterances = [str(outt['last_utterance']) for outt in ohabit['intents']]
+            # Check if new utterances are in old utterances
+            if set(new_utterances).issubset(set(old_utterances)):
+                LOG.info('skill habit already exists')
+                return True
+        LOG.info('skill habit does not exist')
+        return False
+
     def fusion_habits(self, intent, old_intent):
         LOG.info(intent['last_utterance'])
         old_intent.append(intent)
         LOG.info('FUSION')
         return old_intent
 
-    def check_habit_presence(self, X, time, days, interval_max):
-
+    def check_habit_presence(self, utterance, time, days):
         """returns true if a habit with same
         trigger_type,time and days alreasy exists,
         returns False if not"""
+        old_habits = self.get_all_habits()
 
         # Init variables
         intent = {
@@ -617,6 +635,7 @@ def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
     we can executre apriori algorithm on them
     """
     with open('/opt/mycroft/habits/inputApriori.csv', 'w') as fp:
+        LOG.info('opened')
         writer = csv.writer(fp, delimiter=',')
         for row in table_csv:
             writer.writerow(row)
@@ -642,6 +661,7 @@ def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
     # Hash to json data
     habits = []
     habit = []
+    intents = []
 
     for hash in hashes:
         for intent in hash:
@@ -652,8 +672,10 @@ def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
                     hash = hashlib.md5(json.dumps(data)).hexdigest()
                     if hash == intent:
                         habit.append(json.dumps(data))
+                        intents.append(data)
                         break
-        habits.append(habit)
+        if not habit_manager.check_skill_habit(intents):
+            habits.append(habit)
         habit = []
 
     # format habits as expected and register them
@@ -668,6 +690,9 @@ def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
             }
             intents.append(intent)
         habit_manager.register_habit("skill", intents)
-        print intents
         intents = []
+
     os.remove('/opt/mycroft/habits/inputApriori.csv')
+
+
+
