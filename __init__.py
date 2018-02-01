@@ -414,8 +414,8 @@ def process_mining(logs_file_path):
     LOG.info("nb nb_clusters:%d",nb_clusters)
     LOG.info("processing finished")
 
-    #run_apriori(logs_file_path)
-    #LOG.info("apriori finished")
+    run_apriori(logs_file_path)
+    LOG.info("apriori finished")
 
 
 # MODELS
