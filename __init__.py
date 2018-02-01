@@ -70,6 +70,25 @@ class HabitsManager(object):
         """Return one particular habit of the user"""
         return self.habits[habit_id]
 
+    def check_skill_habit(self, new_habit):
+        """
+        Verify if skill habit is already present
+        :return:
+        """
+        new_utterances = []
+        old_habits = self.get_all_habits()
+        new_intents = []
+        LOG.info('new habit')
+        LOG.info(new_habit)
+        new_utterances=[str(utt['utterance']) for utt in new_habit]
+        for ohabit in old_habits:
+            old_utterances = [str(outt['last_utterance']) for outt in ohabit['intents']]
+            if set(new_utterances).issubset(set(old_utterances)):
+                LOG.info('HABIT FOUND')
+                return True
+        LOG.info('NO HABIT FOUND')
+        return False
+
     def check_habit_presence(self, utterance, time, days):
         """returns true if a habit with same
         trigger_type,time and days alreasy exists,
@@ -77,10 +96,11 @@ class HabitsManager(object):
         old_habits = self.get_all_habits()
 
         for old_habit in old_habits:
-            for oi in old_habit['intents']:
-                if((str(utterance) in str(oi['last_utterance'])) and (str(int(float(days))) is str(old_habit['days']))):
-                    LOG.info("OLD HABIT FOUND")
-                    return True
+            if old_habit['trigger_type'] in "time":
+                for oi in old_habit['intents']:
+                    if((str(utterance) in str(oi['last_utterance'])) and (str(int(float(days))) is str(old_habit['days']))):
+                        LOG.info("OLD HABIT FOUND")
+                        return True
         LOG.info("NO HABIT FOUND")
         return False
 
@@ -265,7 +285,7 @@ def extract_ids(data):
 
 def random_date(start, end):
     """
-    This function will return a random datetime between two datetime 
+    This function will return a random datetime between two datetime
     objects.
     """
     delta = end - start
@@ -590,6 +610,7 @@ def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
     # Hash to json data
     habits = []
     habit = []
+    intents = []
 
     for hash in hashes:
         for intent in hash:
@@ -600,8 +621,9 @@ def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
                     hash = hashlib.md5(json.dumps(data)).hexdigest()
                     if hash == intent:
                         habit.append(json.dumps(data))
+                        intents.append(data)
                         break
-        if not check_skill_habit(habit):
+        if not habit_manager.check_skill_habit(intents):
             habits.append(habit)
         habit = []
 
@@ -622,18 +644,4 @@ def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
     os.remove('/opt/mycroft/habits/inputApriori.csv')
 
 
-def check_skill_habit(habit):
-    new_utterance = []
-    old_utterance = []
-    for intent in habit:
-        new_utterance.append(json.loads(intent)['utterance'])
 
-    with open('/opt/mycroft/habits/habits.json') as json_data:
-        data = json.load(json_data)
-        for i in data:
-            for intent in i['intents']:
-                old_utterance.append(intent['last_utterance'])
-            if old_utterance == new_utterance:
-                return True
-        old_utterance = []
-    return False
