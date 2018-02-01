@@ -44,9 +44,9 @@ __authors__ = 'Nuttymoon, adrienchevrier, florianhepp'
 LOGGER = getLogger(__name__)
 
 SKILLS_FOLDERS = {
-    "/opt/mycroft/skills/mycroft-skill-listener": "skill listener",
-    "/opt/mycroft/skills/mycroft-habit-miner-skill": "habit miner",
-    "/opt/mycroft/skills/mycroft-automation-handler": "automation handler"
+    "/opt/mycroft/skills/PFE1718-skill-listener": "skill listener",
+    "/opt/mycroft/skills/PFE1718-habit-miner-skill": "habit miner",
+    "/opt/mycroft/skills/PFE1718-automation-handler": "automation handler"
 }
 
 
@@ -97,9 +97,7 @@ class HabitsManager(object):
         return False
 
     def fusion_habits(self, intent, old_intent):
-        LOG.info(intent['last_utterance'])
         old_intent.append(intent)
-        LOG.info('FUSION')
         return old_intent
 
     def check_habit_presence(self, X, time, days, interval_max):
@@ -116,8 +114,8 @@ class HabitsManager(object):
         # check habit presence
         for old_habit in self.habits:
             # If habit with same dates and time exists
-            if old_habit['trigger_type'] in "time":
-                if days in str(old_habit['days']):
+            if old_habit['trigger_type'] == "time":
+                if days in old_habit['days']:
                     # if habit with same name exists
                     if ((
                             str(intent['last_utterance']) in map(
@@ -376,7 +374,6 @@ def parse_json(data):
         utt.append(my_utterance)
     X = np.array((days, times, ids, intents, params, utt))
     X = X.transpose()
-    print(X.shape)
     return X
 
 
@@ -428,6 +425,7 @@ def write_habit(X, labels, core_samples_mask_dbscan):
     num_clusters = 0
 
     for k in unique_labels:
+        zero = ""
         # Check if cluster
         if k >= 0:
 
@@ -450,12 +448,14 @@ def write_habit(X, labels, core_samples_mask_dbscan):
                     max(
                         np.absolute(
                             (hour_moy * 60 + min_moy) - hour * 60 - minute)))
-                time = str(hour_moy) + ":" + str(min_moy_rounded)
+                if min_moy_rounded < 10:
+                    zero += "0"
+                time = str(hour_moy) + ":" + zero + str(min_moy_rounded)
                 # Register ID, params, intents, days, hours
                 my_habit_manager = HabitsManager()
                 # Add new clusters to cluster counter
                 num_clusters = my_habit_manager.check_habit_presence(
-                    X, time, str(day), interval_max) + num_clusters
+                    X, time, day, interval_max) + num_clusters
 
     return num_clusters
 
@@ -472,7 +472,7 @@ def process_mining(logs_file_path):
         X = parse_json(raw_data)
 
     except:
-        print "Unexpected error, exiting habit miner"
+        LOGGER.info("Unexpected error, exiting habit miner")
         return -1
 
     # compute dbscan per id
@@ -635,22 +635,6 @@ def apriori(data_iter, min_support, min_confidence):
                         to_ret_rules.append(
                             ((tuple(element), tuple(remain)), confidence))
     return to_ret_items, to_ret_rules
-
-
-def print_results(items, rules):
-    """
-    prints the generated itemsets sorted by support
-    and the confidence rules sorted by confidence
-    """
-    for item, support in sorted(items, key=lambda (item, support): support):
-        print "item: %s , %.3f" % (str(item), support)
-    print "\n------------------------ RULES:"
-    for rule, confidence in sorted(
-            rules, key=lambda (
-                rule, confidence): confidence):
-        pre, post = rule
-        print "Rule: %s ==> %s , %.3f" % (
-            str(pre), str(post), confidence)
 
 
 def data_from_file(fname):
