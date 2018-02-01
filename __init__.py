@@ -314,7 +314,7 @@ class HabitMinerSkill(MycroftSkill):
                 Message("recognizer_loop:utterance",
                         {"utterances": ["install " + skill],
                          "lang": 'en-us'}))
-            self.to_install = []
+        self.to_install = []
 
     @intent_handler(IntentBuilder("NotInstallMissingIntent")
                     .require("NoKeyword")
