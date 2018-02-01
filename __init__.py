@@ -44,6 +44,7 @@ __author__ = 'Nuttymoon'
 # statements will show up in the command line when running Mycroft.
 LOGGER = getLogger(__name__)
 
+
 class HabitsManager(object):
     """
     This class manages the reading and writting in the file habits.json
@@ -70,49 +71,55 @@ class HabitsManager(object):
         """Return one particular habit of the user"""
         return self.habits[habit_id]
 
-    def fusion_habits(self,intent,old_intent):
+    def fusion_habits(self, intent, old_intent):
         LOG.info(intent['last_utterance'])
         old_intent.append(intent)
         LOG.info('FUSION')
         return old_intent
 
-    def check_habit_presence(self, X, time, days,interval_max):
+    def check_habit_presence(self, X, time, days, interval_max):
+
         """returns true if a habit with same
         trigger_type,time and days alreasy exists,
         returns False if not"""
+
         # Init variables
-        nb_habits = 0
-        hv = {'utterance':str(X[0, 5]),'name':str(X[0, 3]),'parameters':X[0, 4]}
-        old_habits = self.get_all_habits()
         intent = {
-                "name": hv['name'],
-                "parameters": hv['parameters'],
-                "last_utterance": hv['utterance']
-            }
+            "name": str(X[0, 3]),
+            "parameters": X[0, 4],
+            "last_utterance": str(X[0, 5])}
+
         # check habit presence
         for old_habit in self.habits:
             # If habit with same dates and time exists
             if (days in str(old_habit['days'])):
                 # if habit with same name exists
-                if((str(intent['last_utterance']) in
-                        map (lambda x:x['last_utterance'],old_habit['intents']))):
+                if ((
+                            str(intent['last_utterance']) in map(
+                                lambda x: x[
+                                    'last_utterance'], old_habit['intents']
+                        ))):
                     LOG.info("old habit found, no habit written")
                     return 0
                 # fusion if habits dont have same utterance
-                elif(str(time) in str(old_habit['time'])):
-                    old_habit['intents'] = self.fusion_habits(intent,old_habit['intents'])
+                elif (str(time) in str(old_habit['time'])):
+                    old_habit['intents'] = self.fusion_habits(
+                        intent,
+                        old_habit['intents'])
+
                     # Write fusionned habit
-                    with open(self.habits_file_path, 'w') as habits_file:
+                    with open(
+                            self.habits_file_path, 'w') as habits_file:
                         json.dump(self.habits, habits_file)
                     return 0
 
-                else:LOG.info('no habit found same day, new habit created')
-            else:LOG.info('no habit found, new habit created')
+                else:
+                    LOG.info('no habit found same day, new habit created')
+            else:
+                LOG.info('no habit found, new habit created')
         # register new habit
         self.register_habit("time", [intent], time, [days], str(interval_max))
         return 1
-
-
 
     def register_habit(self, trigger_type, intents, t=None, days=None,
                        interval_max=None):
@@ -184,10 +191,15 @@ class HabitsManager(object):
         for known_trig in self.triggers:
             for i in new_triggers:
                 LOGGER.info("Testing trigger" + str(habit["intents"][int(i)]))
-                if habit["intents"][i]["name"] == known_trig["intent"] and \
-                        habit["intents"][i]["parameters"] \
-                        == known_trig["parameters"]:
+                if (
+                        habit[
+                            "intents"][i]["name"] == known_trig[
+                                "intent"]) and (
+                            habit[
+                                "intents"][i]["parameters"] == known_trig[
+                                    "parameters"]):
                     return False
+
                 to_add += [
                     {
                         "intent": habit["intents"][i]["name"],
@@ -295,9 +307,10 @@ def extract_ids(data):
 
 def random_date(start, end):
     """
-    This function will return a random datetime between two datetime 
+    This function will return a random datetime between two datetime
     objects.
     """
+
     delta = end - start
     int_delta = (delta.days * 24 * 60 * 60) + delta.seconds
     random_second = randrange(int_delta)
@@ -308,7 +321,7 @@ def date_to_days(date):
     """
     This function returns day of week in range 1-10
     """
-    day_t = (float(date.weekday()) *10.0)/6.0
+    day_t = (float(date.weekday()) * 10.0) / 6.0
     return day_t
 
 
@@ -328,15 +341,15 @@ def time_to_hours(date):
 
 
 # Write new habit
-def write_habit(X, labels,core_samples_mask_dbscan):
+def write_habit(X, labels, core_samples_mask_dbscan):
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
     # Black removed and is used for noise instead.
     unique_labels = set(labels)
     num_clusters = 0
 
     for k in unique_labels:
-        #Check if cluster
-        if k >=0:
+        # Check if cluster
+        if k >= 0:
 
             class_member_mask = (labels == k)
 
@@ -353,65 +366,67 @@ def write_habit(X, labels,core_samples_mask_dbscan):
                 min_moy_rounded = float(float(min_moy) / 60.0)
                 min_moy_rounded = int(round(min_moy_rounded * 12) * 5)
                 # Calculate inteval max to detect habit
-                interval_max = np.ceil(max(np.absolute((hour_moy * 60 + min_moy) - hour * 60 - minute)))
+                interval_max = np.ceil(
+                    max(
+                        np.absolute(
+                            (hour_moy * 60 + min_moy) - hour * 60 - minute)))
                 time = str(hour_moy) + ":" + str(min_moy_rounded)
                 # Register ID, params, intents, days, hours
                 my_habit_manager = HabitsManager()
-                num_clusters = my_habit_manager.check_habit_presence(X,time,str(day),interval_max) + num_clusters
-
+                # Add new clusters to cluster counter
+                num_clusters = my_habit_manager.check_habit_presence(
+                    X, time, str(day), interval_max) + num_clusters
 
     return num_clusters
 
 
-# MAIN STEPS
-# Learning steps
-
-
 def process_mining(logs_file_path):
-    # READ DATAimport sys
+    """
+    MAIN STEPS
+    take logs as input, process mining and set habits as output
+    """
 
+    # Try to read json logs
     try:
         raw_data = read_json(logs_file_path)
         X = parse_json(raw_data)
-        # Take hour and day for clustering
-        X_cluster = X[:, [0, 1]]
+
     except:
         print "Unexpected error, exiting habit miner"
         return -1
 
-
     # compute dbscan per id
-    unique_ids = extract_ids(X[:,2])
+    unique_ids = extract_ids(X[:, 2])
     nb_clusters = 0
 
+    # Compute dbscan for each application ID
     for i in unique_ids:
-        # even_numbers = list(filter(lambda x: x % 2 == 0, fibonacci))
+
+        # Filter points
         X_mini = X[X[:, 2] == i]
+
+        # Check if points >2
         if (X_mini[:, 0].shape[0] > 2):
             X_mini_cluster = X_mini[:, [0, 1]]
-            # Affinity propagation
-            # cluster_centers_indices, labels = compute_AP(X_mini_cluster)
+
             # dbscan
             core_samples_mask, labels = compute_DBSCAN(X_mini_cluster)
 
-            # convert days and hours to 24 and 7 ranges
+            # Convert hours to 24 range
+            def to_24(X): return map(lambda x: (x / 10) * 24, X)
 
-            def to_24(x): return (x / 10) * 7
+            # Convert days to 7 range
+            def to_7(X): return map(lambda x: (x / 10) * 6, X)
 
-            def to_7(x): return (x / 10) * 24
+            X_mini[:, 0] = to_7(X_mini[:, 0].astype(float))
+            X_mini[:, 1] = to_24(X_mini[:, 1].astype(float))
 
-            X_mini[:, 0] = to_24(X_mini[:, 0].astype(float))
-            X_mini[:, 1] = to_7(X_mini[:, 1].astype(float))
-            X_mini_cluster[:, 0] = to_24(X_mini_cluster[:, 0].astype(float))
-            X_mini_cluster[:, 1] = to_7(X_mini_cluster[:, 1].astype(float))
+            # Write clean and write new habit
+            nb_clusters = write_habit(
+                X_mini, labels, core_samples_mask) + nb_clusters
 
-            nb_clusters = write_habit(X_mini, labels,core_samples_mask) + nb_clusters
-            # Plot AP
-            # plot_AP(X_mini_cluster,cluster_centers_indices,labels)
-            # plot dbscan
-            name = X_mini[0, 2]
-            #plot_DBSCAN(X_mini_cluster, core_samples_mask, labels, name)
-    LOG.info("nb nb_clusters:%d",nb_clusters)
+    # Print infos
+    LOG.info("nb nb_clusters:%d", nb_clusters)
     LOG.info("processing finished")
 
     run_apriori(logs_file_path)
@@ -443,7 +458,8 @@ def subsets(arr):
     return chain(*[combinations(arr, i + 1) for i, a in enumerate(arr)])
 
 
-def return_item_with_min_support(item_set, transaction_list, min_support, freq_set):
+def return_item_with_min_support(
+        item_set, transaction_list, min_support, freq_set):
     """calculates the support for items in the itemSet and returns a subset
    of the itemSet each of whose elements satisfies the minimum support"""
     _itemSet = set()
@@ -466,7 +482,11 @@ def return_item_with_min_support(item_set, transaction_list, min_support, freq_s
 
 def join_set(item_set, length):
     """Join a set with itself and returns the n-element itemsets"""
-    return set([i.union(j) for i in item_set for j in item_set if len(i.union(j)) == length])
+    return set(
+        [
+            i.union(
+                j) for i in item_set for j in item_set if len(
+                    i.union(j)) == length])
 
 
 def get_item_set_transaction_list(data_iterator):
@@ -498,9 +518,9 @@ def apriori(data_iter, min_support, min_confidence):
     # Dictionary which stores Association Rules
 
     one_c_set = return_item_with_min_support(item_set,
-                                           transaction_list,
-                                           min_support,
-                                           freq_set)
+                                             transaction_list,
+                                             min_support,
+                                             freq_set)
 
     current_l_set = one_c_set
     k = 2
@@ -508,9 +528,9 @@ def apriori(data_iter, min_support, min_confidence):
         large_set[k - 1] = current_l_set
         current_l_set = join_set(current_l_set, k)
         current_c_set = return_item_with_min_support(current_l_set,
-                                                   transaction_list,
-                                                   min_support,
-                                                   freq_set)
+                                                     transaction_list,
+                                                     min_support,
+                                                     freq_set)
         current_l_set = current_c_set
         k = k + 1
 
@@ -521,7 +541,7 @@ def apriori(data_iter, min_support, min_confidence):
     to_ret_items = []
     for key, value in large_set.items():
         to_ret_items.extend([(tuple(item), get_support(item))
-                           for item in value])
+                             for item in value])
 
     to_ret_rules = []
     for key, value in large_set.items()[1:]:
@@ -532,18 +552,25 @@ def apriori(data_iter, min_support, min_confidence):
                 if len(remain) > 0:
                     confidence = get_support(item) / get_support(element)
                     if confidence >= min_confidence:
-                        to_ret_rules.append(((tuple(element), tuple(remain)), confidence))
+                        to_ret_rules.append(
+                            ((tuple(element), tuple(remain)), confidence))
     return to_ret_items, to_ret_rules
 
 
 def print_results(items, rules):
-    """prints the generated itemsets sorted by support and the confidence rules sorted by confidence"""
+    """
+    prints the generated itemsets sorted by support
+    and the confidence rules sorted by confidence
+    """
     for item, support in sorted(items, key=lambda (item, support): support):
         print "item: %s , %.3f" % (str(item), support)
     print "\n------------------------ RULES:"
-    for rule, confidence in sorted(rules, key=lambda (rule, confidence): confidence):
+    for rule, confidence in sorted(
+            rules, key=lambda (
+                              rule, confidence): confidence):
         pre, post = rule
-        print "Rule: %s ==> %s , %.3f" % (str(pre), str(post), confidence)
+        print "Rule: %s ==> %s , %.3f" % (
+            str(pre), str(post), confidence)
 
 
 def data_from_file(fname):
@@ -558,14 +585,19 @@ def data_from_file(fname):
 def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
     hashes_temp = []
     table_csv = []
-    date_time_obj0 = datetime.strptime('2018-01-01 00:00:00.0', '%Y-%m-%d %H:%M:%S.%f')
+    date_time_obj0 = datetime.strptime(
+        '2018-01-01 00:00:00.0', '%Y-%m-%d %H:%M:%S.%f')
     habit_manager = HabitsManager()
 
-    # Open logs and put them in a list, same line if consequent logs are within 5 minutes interval
+    """
+    Open logs and put them in a list,
+    same line if consequent logs are within 5 minutes interval
+    """
     with open(logs_file_path) as json_data:
         for i, line in enumerate(json_data):
             data = json.loads(line)
-            date_time_obj1 = datetime.strptime(data['datetime'], '%Y-%m-%d %H:%M:%S.%f')
+            date_time_obj1 = datetime.strptime(
+                data['datetime'], '%Y-%m-%d %H:%M:%S.%f')
             delta = date_time_obj1 - date_time_obj0
             del data['datetime']
             hash = hashlib.md5(json.dumps(data)).hexdigest()
@@ -580,7 +612,10 @@ def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
 
     del table_csv[0]
 
-    # Converts logs list to csv so that we can executre apriori algorithm on them
+    """
+    Converts logs list to csv so that
+    we can executre apriori algorithm on them
+    """
     with open('/opt/mycroft/habits/inputApriori.csv', 'w') as fp:
         writer = csv.writer(fp, delimiter=',')
         for row in table_csv:
