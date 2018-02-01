@@ -289,7 +289,8 @@ class HabitMinerSkill(MycroftSkill):
 
         if not ret:
             self.set_context("InstallMissingContext")
-            dial = "To use this skill, you also have to install the skill"
+            dial = ("To use the skill habit miner, you also have to install "
+                    "the skill")
             num_skill = "this skill"
             skills_list = ""
             for skill in self.to_install[:-1]:
