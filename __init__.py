@@ -77,12 +77,13 @@ class HabitsManager(object):
         """
 
         old_habits = self.get_all_habits()
-        new_utterances=[str(utt['utterance']) for utt in new_habit]
+        new_utterances = [str(utt['utterance']) for utt in new_habit]
         # Check utterances for each old habit
         for ohabit in old_habits:
             # Extract utterances from old habit
             if ohabit['trigger_type'] in "skill":
-                old_utterances = [str(outt['last_utterance']) for outt in ohabit['intents']]
+                old_utterances = [
+                    str(outt['last_utterance']) for outt in ohabit['intents']]
                 # Check if new utterances are in old utterances
                 if set(new_utterances).issubset(set(old_utterances)):
                     LOG.info('skill habit already exists')
@@ -96,7 +97,7 @@ class HabitsManager(object):
         LOG.info('FUSION')
         return old_intent
 
-    def check_habit_presence(self, X, time, days,interval_max):
+    def check_habit_presence(self, X, time, days, interval_max):
         """returns true if a habit with same
         trigger_type,time and days alreasy exists,
         returns False if not"""
@@ -697,6 +698,3 @@ def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
         intents = []
 
     os.remove('/opt/mycroft/habits/inputApriori.csv')
-
-
-
