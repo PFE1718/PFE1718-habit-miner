@@ -314,12 +314,14 @@ class HabitMinerSkill(MycroftSkill):
                 Message("recognizer_loop:utterance",
                         {"utterances": ["install " + skill],
                          "lang": 'en-us'}))
+            self.to_install = []
 
     @intent_handler(IntentBuilder("NotInstallMissingIntent")
                     .require("NoKeyword")
                     .require("InstallMissingContext").build())
     @removes_context("InstallMissingContext")
     def handle_not_install_missing(self):
+        self.to_install = []
         pass
 
 # endregion
