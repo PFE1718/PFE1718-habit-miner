@@ -20,22 +20,19 @@ import numpy as np
 import os
 import hashlib
 
-from datetime import datetime, timedelta
-
 from itertools import chain, combinations
 from collections import defaultdict
 
 from sklearn.cluster import DBSCAN, AffinityPropagation
 from sklearn.preprocessing import StandardScaler
 from random import randrange
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta
 from dateutil import parser
 from statistics import mean
 
 from adapt.intent import IntentBuilder
 from mycroft.skills.core import MycroftSkill
 from mycroft.skills.core import intent_handler
-from mycroft.skills.context import adds_context, removes_context
 from mycroft.util.log import getLogger, LOG
 
 __author__ = 'Nuttymoon'
