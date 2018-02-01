@@ -33,13 +33,21 @@ from statistics import mean
 from adapt.intent import IntentBuilder
 from mycroft.skills.core import MycroftSkill
 from mycroft.skills.core import intent_handler
+from mycroft.skills.context import removes_context
+from mycroft.messagebus.message import Message
 from mycroft.util.log import getLogger, LOG
 
-__author__ = 'Nuttymoon'
+__authors__ = 'Nuttymoon, adrienchevrier, florianhepp'
 
 # Logger: used for debug lines, like "LOGGER.debug(xyz)". These
 # statements will show up in the command line when running Mycroft.
 LOGGER = getLogger(__name__)
+
+SKILLS_FOLDERS = {
+    "/opt/mycroft/skills/mycroft-skill-listener": "skill listener",
+    "/opt/mycroft/skills/mycroft-habit-miner-skill": "habit miner",
+    "/opt/mycroft/skills/mycroft-automation-handler": "automation handler"
+}
 
 
 class HabitsManager(object):
@@ -112,9 +120,9 @@ class HabitsManager(object):
                 if days in str(old_habit['days']):
                     # if habit with same name exists
                     if ((
-                                str(intent['last_utterance']) in map(
-                                    lambda x: x[
-                                        'last_utterance'], old_habit['intents']
+                            str(intent['last_utterance']) in map(
+                                lambda x: x[
+                                    'last_utterance'], old_habit['intents']
                             ))):
                         LOG.info("old habit found, no habit written")
                         return 0
@@ -129,13 +137,14 @@ class HabitsManager(object):
                                 self.habits_file_path, 'w') as habits_file:
                             json.dump(self.habits, habits_file)
                         return 0
-
+                """
                     else:
                         LOG.info('no habit found same day, new habit created')
                 else:
                     LOG.info('no habit found, new habit created')
             else:
                 LOG.info('no habit found, new habit created')
+            """
 
         # register new habit
         self.register_habit("time", [intent], time, [days], str(interval_max))
@@ -215,9 +224,9 @@ class HabitsManager(object):
                         habit[
                             "intents"][i]["name"] == known_trig[
                                 "intent"]) and (
-                            habit[
-                                "intents"][i]["parameters"] == known_trig[
-                                    "parameters"]):
+                    habit[
+                        "intents"][i]["parameters"] == known_trig[
+                        "parameters"]):
                     return False
 
                 to_add += [
@@ -260,11 +269,62 @@ class HabitMinerSkill(MycroftSkill):
         super(HabitMinerSkill, self).__init__(
             name="HabitMinerSkill")
         self.logs_file_path = "/opt/mycroft/habits/logs.json"
+        self.to_install = []
 
     @intent_handler(IntentBuilder("LaunchMiningIntent")
                     .require("LaunchMiningKeyword"))
     def handle_launch_mining(self, message):
+        if not self.check_skills_intallation():
+            return
+
         process_mining(self.logs_file_path)
+
+    # region Dependent skills installation
+
+    def check_skills_intallation(self):
+        LOGGER.info("Checking for skills install...")
+        ret = True
+        for folder, skill in SKILLS_FOLDERS.iteritems():
+            if not os.path.isdir(folder):
+                ret = False
+                self.to_install += [skill]
+
+        if not ret:
+            self.set_context("InstallMissingContext")
+            dial = "To use this skill, you also have to install the skill"
+            num_skill = "this skill"
+            skills_list = ""
+            for skill in self.to_install[:-1]:
+                skills_list += skill + ", "
+            if len(self.to_install) > 1:
+                num_skill = "these {} skills".format(len(self.to_install))
+                skills_list += "and "
+                dial += "s"
+            skills_list += self.to_install[-1]
+            self.speak(dial + " " + skills_list +
+                       ". Should I install {} for you?".format(num_skill),
+                       expect_response=True)
+        return ret
+
+    @intent_handler(IntentBuilder("InstallMissingIntent")
+                    .require("YesKeyword")
+                    .require("InstallMissingContext").build())
+    @removes_context("InstallMissingContext")
+    def handle_install_missing(self):
+        for skill in self.to_install:
+            self.emitter.emit(
+                Message("recognizer_loop:utterance",
+                        {"utterances": ["install " + skill],
+                         "lang": 'en-us'}))
+
+    @intent_handler(IntentBuilder("NotInstallMissingIntent")
+                    .require("NoKeyword")
+                    .require("InstallMissingContext").build())
+    @removes_context("InstallMissingContext")
+    def handle_not_install_missing(self):
+        pass
+
+# endregion
 
     def stop(self):
         pass
@@ -587,7 +647,7 @@ def print_results(items, rules):
     print "\n------------------------ RULES:"
     for rule, confidence in sorted(
             rules, key=lambda (
-                              rule, confidence): confidence):
+                rule, confidence): confidence):
         pre, post = rule
         print "Rule: %s ==> %s , %.3f" % (
             str(pre), str(post), confidence)
