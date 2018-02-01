@@ -656,6 +656,9 @@ def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
         '2018-01-01 00:00:00.0', '%Y-%m-%d %H:%M:%S.%f')
     habit_manager = HabitsManager()
 
+    if not os.path.getsize(logs_file_path):
+        return
+
     """
     Open logs and put them in a list,
     same line if consequent logs are within 5 minutes interval
