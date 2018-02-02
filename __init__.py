@@ -14,7 +14,6 @@
 # limitations under the License.
 
 import json
-import random
 import csv
 import numpy as np
 import os
@@ -111,21 +110,30 @@ class HabitsManager(object):
             "parameters": X[0, 4],
             "last_utterance": str(X[0, 5])}
 
+
+        # used to compare time with previous habits
+        s_time = datetime.strptime(time, '%H:%M')
         # check habit presence
         for old_habit in self.habits:
             # If habit with same dates and time exists
             if old_habit['trigger_type'] == "time":
                 if days in old_habit['days']:
+                    # Verify if time between old habit and new habit
+                    # are in interval_max
+                    o_time = datetime.strptime(old_habit['time'], '%H:%M')
+                    diff = abs(
+                        s_time.hour * 60 + s_time.minute
+                        -o_time.hour * 60 - o_time.minute)
                     # if habit with same name exists
                     if ((
                             str(intent['last_utterance']) in map(
                                 lambda x: x[
                                     'last_utterance'], old_habit['intents']
-                            ))):
+                            )) and diff <= interval_max):
                         LOG.info("old habit found, no habit written")
                         return 0
                     # fusion if habits dont have same utterance
-                    elif (str(time) in str(old_habit['time'])):
+                    elif diff <= interval_max:
                         old_habit['intents'] = self.fusion_habits(
                             intent,
                             old_habit['intents'])
