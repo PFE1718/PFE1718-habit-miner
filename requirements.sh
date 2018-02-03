@@ -7,7 +7,7 @@ if [ ! -d "/opt/mycroft/habits" ]; then
     sudo chmod -R ugo+rw /opt/mycroft/habits
 fi
 #pip install --upgrade pip
-pip install -Iv scipy==0.13.3
+#pip install -Iv scipy==0.13.3
 #pip install -U scikit-learn
 #pip install -U statistics
 #pip install -U numpy
