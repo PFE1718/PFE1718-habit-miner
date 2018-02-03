@@ -4,4 +4,3 @@
 scipy==0.13.3
 scikit-learn
 statistics
-numpy
