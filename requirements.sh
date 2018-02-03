@@ -8,6 +8,7 @@ if [ ! -d "/opt/mycroft/habits" ]; then
 fi
 
 sudo apt-get install python-pip
+pip install --upgrade pip
 #pip install --upgrade pip
 #pip install -Iv scipy==0.13.3
 #pip install -U scikit-learn
