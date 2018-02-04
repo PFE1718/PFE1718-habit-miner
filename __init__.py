@@ -59,10 +59,10 @@ class HabitsManager(object):
     """
 
     def __init__(self):
-        self.habits_file_path = ("/opt/mycroft/skills/PFE1718-skill-listener"
-                                 "/habits/habits.json")
-        self.triggers_file_path = ("/opt/mycroft/skills/PFE1718-skill-listener"
-                                   "/habits/triggers.json")
+        self.habits_file_path = os.path.expanduser(
+            "~/.mycroft/skills/ListenerSkill/habits/habits.json")
+        self.triggers_file_path = os.path.expanduser(
+            "~/.mycroft/skills/ListenerSkill/habits/triggers.json")
 
     def load_files(self):
         self.habits = json.load(open(self.habits_file_path))
@@ -271,8 +271,8 @@ class HabitMinerSkill(MycroftSkill):
     def __init__(self):
         super(HabitMinerSkill, self).__init__(
             name="HabitMinerSkill")
-        self.logs_file_path = ("/opt/mycroft/skills/PFE1718-skill-listener"
-                               "/habits/logs.json")
+        self.logs_file_path = os.path.expanduser(
+            "~/.mycroft/skills/ListenerSkill/habits/logs.json")
         self.to_install = []
 
     @intent_handler(IntentBuilder("LaunchMiningIntent")
@@ -661,7 +661,8 @@ def data_from_file(fname):
 def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
     hashes_temp = []
     table_csv = []
-    csv_path = "/opt/mycroft/PFE1718-skill-listener/habits/inputApriori.csv"
+    csv_path = os.path.expanduser(
+        "~/.mycroft/skills/HabitMinerSkill/inputApriori.csv")
     date_time_obj0 = datetime.strptime(
         '2018-01-01 00:00:00.0', '%Y-%m-%d %H:%M:%S.%f')
     habit_manager = HabitsManager()
@@ -697,7 +698,7 @@ def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
     Converts logs list to csv so that
     we can executre apriori algorithm on them
     """
-    with open(csv_path, 'w') as fp:
+    with open(csv_path, 'w+') as fp:
         LOG.info('opened')
         writer = csv.writer(fp, delimiter=',')
         for row in table_csv:
