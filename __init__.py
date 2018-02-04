@@ -156,9 +156,21 @@ class HabitsManager(object):
         self.register_habit("time", [intent], time, [days], str(interval_max))
         return 1
 
-    def register_habit(self, trigger_type, intents, t=None, days=None,
+    def register_habit(self, trigger_type, intents, time=None, days=None,
                        interval_max=None):
-        """Register a new habit in habits.json"""
+        """
+        Register a new habit in habits.json
+
+        Args:
+            trigger_type (str): the habit trigger type ("time" or "skill")
+            intents (datastore): the intents that are part of the habit
+            time (str): the time of the habit (if time based)
+            days (int[]): the days of the habit (if time based)
+        """
+        detected = True
+        if not len(intents) > 0:
+            detected = False
+
         if trigger_type == "skill":
             self.habits += [
                 {
@@ -166,7 +178,8 @@ class HabitsManager(object):
                     "trigger_type": trigger_type,
                     "automatized": 0,
                     "user_choice": False,
-                    "triggers": []
+                    "triggers": [],
+                    "detected": detected
                 }
             ]
         else:
@@ -176,8 +189,9 @@ class HabitsManager(object):
                     "trigger_type": trigger_type,
                     "automatized": 0,
                     "user_choice": False,
-                    "time": t,
+                    "time": time,
                     "days": days,
+                    "detected": detected,
                     "interval_max": interval_max
                 }
             ]
