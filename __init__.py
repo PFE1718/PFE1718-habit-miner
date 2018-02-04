@@ -59,9 +59,10 @@ class HabitsManager(object):
     """
 
     def __init__(self):
-        self.habits_file_path = "/opt/mycroft/habits/habits.json"
-        self.triggers_file_path = "/opt/mycroft/habits/triggers.json"
-        self.load_files()
+        self.habits_file_path = ("/opt/mycroft/skills/PFE1718-skill-listener"
+                                 "/habits/habits.json")
+        self.triggers_file_path = ("/opt/mycroft/skills/PFE1718-skill-listener"
+                                   "/habits/triggers.json")
 
     def load_files(self):
         self.habits = json.load(open(self.habits_file_path))
@@ -110,7 +111,6 @@ class HabitsManager(object):
             "parameters": X[0, 4],
             "last_utterance": str(X[0, 5])}
 
-
         # used to compare time with previous habits
         s_time = datetime.strptime(time, '%H:%M')
         # check habit presence
@@ -122,8 +122,8 @@ class HabitsManager(object):
                     # are in interval_max
                     o_time = datetime.strptime(old_habit['time'], '%H:%M')
                     diff = abs(
-                        s_time.hour * 60 + s_time.minute
-                        -o_time.hour * 60 - o_time.minute)
+                        s_time.hour * 60 + s_time.minute -
+                        o_time.hour * 60 - o_time.minute)
                     # if habit with same name exists
                     if ((
                             str(intent['last_utterance']) in map(
@@ -274,7 +274,8 @@ class HabitMinerSkill(MycroftSkill):
     def __init__(self):
         super(HabitMinerSkill, self).__init__(
             name="HabitMinerSkill")
-        self.logs_file_path = "/opt/mycroft/habits/logs.json"
+        self.logs_file_path = ("/opt/mycroft/skills/PFE1718-skill-listener"
+                               "/habits/logs.json")
         self.to_install = []
 
     @intent_handler(IntentBuilder("LaunchMiningIntent")
@@ -464,6 +465,7 @@ def write_habit(X, labels, core_samples_mask_dbscan):
                 time = str(hour_moy) + ":" + zero + str(min_moy_rounded)
                 # Register ID, params, intents, days, hours
                 my_habit_manager = HabitsManager()
+                my_habit_manager.load_files()
                 # Add new clusters to cluster counter
                 num_clusters = my_habit_manager.check_habit_presence(
                     X, time, day, interval_max) + num_clusters
@@ -660,9 +662,11 @@ def data_from_file(fname):
 def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
     hashes_temp = []
     table_csv = []
+    csv_path = "/opt/mycroft/PFE1718-skill-listener/habits/inputApriori.csv"
     date_time_obj0 = datetime.strptime(
         '2018-01-01 00:00:00.0', '%Y-%m-%d %H:%M:%S.%f')
     habit_manager = HabitsManager()
+    habit_manager.load_files()
 
     if not os.path.getsize(logs_file_path):
         return
@@ -694,15 +698,15 @@ def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
     Converts logs list to csv so that
     we can executre apriori algorithm on them
     """
-    with open('/opt/mycroft/habits/inputApriori.csv', 'w') as fp:
+    with open(csv_path, 'w') as fp:
         LOG.info('opened')
         writer = csv.writer(fp, delimiter=',')
         for row in table_csv:
             writer.writerow(row)
 
-    in_file = data_from_file('/opt/mycroft/habits/inputApriori.csv')
+    in_file = data_from_file(csv_path)
 
-    items, rules = apriori(in_file, min_supp, min_confidence)
+    _, rules = apriori(in_file, min_supp, min_confidence)
 
     # reformat the rules and sort the tuples in it
     hashes_temp = []
@@ -752,4 +756,4 @@ def run_apriori(logs_file_path, min_supp=0.05, min_confidence=0.8):
         habit_manager.register_habit("skill", intents)
         intents = []
 
-    os.remove('/opt/mycroft/habits/inputApriori.csv')
+    os.remove(csv_path)
