@@ -266,9 +266,6 @@ class HabitsManager(object):
 class HabitMinerSkill(MycroftSkill):
     """
     This class implements the habit miner skill
-
-    Attributes:
-
     """
 
     def __init__(self):
@@ -291,15 +288,17 @@ class HabitMinerSkill(MycroftSkill):
     def check_skills_intallation(self):
         LOGGER.info("Checking for skills install...")
         ret = True
+        self.to_install = []
+
         for folder, skill in SKILLS_FOLDERS.iteritems():
             if not os.path.isdir(folder):
                 ret = False
                 self.to_install += [skill]
 
         if not ret:
-            self.set_context("InstallMissingContext")
-            dial = ("To use the skill habit miner, you also have to install "
-                    "the skill")
+            self.set_context("InstallMissingContextMiner")
+            dial = ("To use the skill automation handler, you also have to "
+                    "install the skill")
             num_skill = "this skill"
             skills_list = ""
             for skill in self.to_install[:-1]:
@@ -316,22 +315,22 @@ class HabitMinerSkill(MycroftSkill):
 
     @intent_handler(IntentBuilder("InstallMissingIntent")
                     .require("YesKeyword")
-                    .require("InstallMissingContext").build())
-    @removes_context("InstallMissingContext")
+                    .require("InstallMissingContextMiner").build())
+    @removes_context("InstallMissingContextMiner")
     def handle_install_missing(self):
+        LOGGER.info(self.to_install)
         for skill in self.to_install:
+            LOGGER.info("Installing " + skill)
             self.emitter.emit(
                 Message("recognizer_loop:utterance",
                         {"utterances": ["install " + skill],
                          "lang": 'en-us'}))
-        self.to_install = []
 
     @intent_handler(IntentBuilder("NotInstallMissingIntent")
                     .require("NoKeyword")
-                    .require("InstallMissingContext").build())
-    @removes_context("InstallMissingContext")
+                    .require("InstallMissingContextMiner").build())
+    @removes_context("InstallMissingContextMiner")
     def handle_not_install_missing(self):
-        self.to_install = []
         pass
 
 # endregion
