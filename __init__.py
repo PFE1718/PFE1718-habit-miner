@@ -167,9 +167,6 @@ class HabitsManager(object):
             time (str): the time of the habit (if time based)
             days (int[]): the days of the habit (if time based)
         """
-        detected = True
-        if not len(intents) > 0:
-            detected = False
 
         if trigger_type == "skill":
             self.habits += [
@@ -178,8 +175,7 @@ class HabitsManager(object):
                     "trigger_type": trigger_type,
                     "automatized": 0,
                     "user_choice": False,
-                    "triggers": [],
-                    "detected": detected
+                    "triggers": []
                 }
             ]
         else:
@@ -191,7 +187,6 @@ class HabitsManager(object):
                     "user_choice": False,
                     "time": time,
                     "days": days,
-                    "detected": detected,
                     "interval_max": interval_max
                 }
             ]
