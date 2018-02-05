@@ -1,7 +1,7 @@
 #This file is for any packages you need installed for your skill to run
-pip install --upgrade pip
-pip install -Iv numpy>=1.6.1
-pip install -Iv scipy>=0.13.3
-pip install -U scikit-learn
-pip install -U sklearn
-pip install -U statistics
+sudo pip install --upgrade pip
+sudo pip install -Iv numpy>=1.6.1
+sudo pip install -Iv scipy>=0.13.3
+sudo pip install -U scikit-learn
+sudo pip install -U sklearn
+sudo pip install -U statistics
